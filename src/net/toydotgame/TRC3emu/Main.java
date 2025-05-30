@@ -7,8 +7,10 @@ import java.util.Scanner;
 public class Main {
 	static Map<String, Integer> instSet;
 	static String[] mnemonics = {
-		"NOP", "HLT", "JMP", "CAL",
-		"RET", "BEQ"
+		"NOP", "HLT", "JMP", "CAL", /* No OP, HaLT, JuMP, CALl */
+		"RET", "BRA", "LDI", "STI", /* RETurn, BRAnch, LoaD Immediate, STore Immediate */
+		"ADD", "SUB", "RSH", "AND" /* ADD, SUBtract, Right SHift, bitwise AND */
+		
 	};
 	
 	public static void main(String[] args) {
@@ -36,9 +38,7 @@ public class Main {
 	private static String[] getInput(Scanner scanner) {
 		System.out.print("Enter instruction: ");
 		String input = scanner.nextLine().replaceAll("\\s+", " ").trim();
-		if(input.length() == 0) {
-			return new String[] {};
-		}
+		if(input.length() == 0) return new String[] {};
 		
 		return input.split(" ");
 	}
