@@ -1,0 +1,82 @@
+package net.toydotgame.TRC3emu;
+
+public class Instruction extends Computer {
+
+	public static void dispatch(String[] args) {
+		String opcode = "";
+		try {
+			opcode = Main.mnemonics[Integer.valueOf(args[0])];
+		} catch(NumberFormatException e) {}
+		
+		switch(opcode) {
+			case "NOP": NOP();                          break;
+			case "HLT": HLT();                          break;
+			case "JMP": JMP(args[1]);                   break;
+			case "CAL": CAL(args[1]);                   break;
+			case "RET": RET();                          break;
+			case "BRA": BRA(args[1], args[2]);          break;
+			case "LDI": LDI(args[1], args[2]);          break;
+			case "ADI": ADI(args[1], args[2]);          break;
+			case "LOD": LOD(args[1], args[2], args[3]); break;
+			case "STO": STO(args[1], args[2], args[3]); break;
+			case "ADD": ADD(args[1], args[2], args[3]); break;
+			case "SUB": SUB(args[1], args[2], args[3]); break;
+			case "RSH": RSH(args[1], args[2], args[3]); break;
+			case "NOR": NOR(args[1], args[2], args[3]); break;
+			case "AND": AND(args[1], args[2], args[3]); break;
+			case "XOR": XOR(args[1], args[2], args[3]); break;
+			default:
+				System.err.println("Invalid opcode! Try again");
+		}
+		
+		if(opcode != ""    // Non-pc-incrementing instructions:
+		&& opcode != "HLT"
+		&& opcode != "JMP"
+		&& opcode != "CAL"
+		&& opcode != "RET") pc++;
+	}
+	
+	static void NOP() {
+		// Do…uh…nothing
+	}
+	
+	static void HLT() {
+		System.out.println("COMPUTER HALTED! Status:");
+		Computer.running = false;
+	}
+	
+	static void JMP(String addr) {
+		pc = Integer.valueOf(addr);
+	}
+	
+	static void CAL(String addr) {
+		push(pc+1);
+		pc = Integer.valueOf(addr);
+	}
+	
+	static void RET() {
+		pc = pop();
+	}
+	
+	static void BRA(String cond, String addr) {}
+	
+	static void LDI(String reg, String imm) {}
+	
+	static void ADI(String reg, String imm) {}
+	
+	static void LOD(String reg, String addrReg, String offset) {}
+	
+	static void STO(String reg, String addrReg, String offset) {}
+	
+	static void ADD(String regA, String regB, String outReg) {}
+	
+	static void SUB(String regA, String regB, String outReg) {}
+	
+	static void RSH(String regA, String regB, String outReg) {}
+	
+	static void NOR(String regA, String regB, String outReg) {}
+	
+	static void AND(String regA, String regB, String outReg) {}
+	
+	static void XOR(String regA, String regB, String outReg) {}
+}
