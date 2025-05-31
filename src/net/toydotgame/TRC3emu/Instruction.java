@@ -21,7 +21,7 @@ public class Instruction extends Computer {
 			case "STO": STO(args[1], args[2], args[3]); break;
 			case "ADD": ADD(args[1], args[2], args[3]); break;
 			case "SUB": SUB(args[1], args[2], args[3]); break;
-			case "RSH": RSH(args[1], args[2], args[3]); break;
+			case "RSH": RSH(args[1], args[2]); break;
 			case "NOR": NOR(args[1], args[2], args[3]); break;
 			case "AND": AND(args[1], args[2], args[3]); break;
 			case "XOR": XOR(args[1], args[2], args[3]); break;
@@ -87,19 +87,57 @@ public class Instruction extends Computer {
 		r[dest] += Integer.valueOf(imm);
 	}
 	
-	static void LOD(String reg, String addrReg, String offset) {}
+	static void LOD(String reg, String addrReg, String offset) {
+		int src = Integer.valueOf(addrReg.substring(1));
+		int dest = Integer.valueOf(reg.substring(1));
+		int data = memRead(r[src]+Integer.valueOf(offset));
+		r[dest] = data;
+	}
 	
-	static void STO(String reg, String addrReg, String offset) {}
+	static void STO(String reg, String addrReg, String offset) {
+		int dest = Integer.valueOf(addrReg.substring(1))+Integer.valueOf(offset);
+		int data = r[Integer.valueOf(reg.substring(1))];
+		memWrite(dest, data);;
+	}
 	
-	static void ADD(String regA, String regB, String outReg) {}
+	static void ADD(String regA, String regB, String outReg) {
+		int a = r[Integer.valueOf(regA.substring(1))];
+		int b = r[Integer.valueOf(regB.substring(1))];
+		int c = a+b;
+		r[Integer.valueOf(outReg.substring(1))] = c;
+	}
 	
-	static void SUB(String regA, String regB, String outReg) {}
+	static void SUB(String regA, String regB, String outReg) {
+		int a = r[Integer.valueOf(regA.substring(1))];
+		int b = r[Integer.valueOf(regB.substring(1))];
+		int c = a-b;
+		r[Integer.valueOf(outReg.substring(1))] = c;
+	}
 	
-	static void RSH(String regA, String regB, String outReg) {}
+	static void RSH(String regA, String outReg) {
+		int a = r[Integer.valueOf(regA.substring(1))];
+		int c = a >>> 2;
+		r[Integer.valueOf(outReg.substring(1))] = c;
+	}
 	
-	static void NOR(String regA, String regB, String outReg) {}
+	static void NOR(String regA, String regB, String outReg) {
+		int a = r[Integer.valueOf(regA.substring(1))];
+		int b = r[Integer.valueOf(regB.substring(1))];
+		int c = ~(a|b);
+		r[Integer.valueOf(outReg.substring(1))] = c;
+	}
 	
-	static void AND(String regA, String regB, String outReg) {}
+	static void AND(String regA, String regB, String outReg) {
+		int a = r[Integer.valueOf(regA.substring(1))];
+		int b = r[Integer.valueOf(regB.substring(1))];
+		int c = a&b;
+		r[Integer.valueOf(outReg.substring(1))] = c;
+	}
 	
-	static void XOR(String regA, String regB, String outReg) {}
+	static void XOR(String regA, String regB, String outReg) {
+		int a = r[Integer.valueOf(regA.substring(1))];
+		int b = r[Integer.valueOf(regB.substring(1))];
+		int c = a^b;
+		r[Integer.valueOf(outReg.substring(1))] = c;
+	}
 }
