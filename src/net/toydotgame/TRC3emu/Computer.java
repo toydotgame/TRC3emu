@@ -9,6 +9,7 @@ public class Computer {
 	public static int[][] fullMem = new int[256][256]; // Main memory, max 256 bytes addressible. Use banking for more
 	public static int[] stack = new int[16];           // 16-byte call stack pointing to memory addrs.
 	public static int bank = 0;                        // Memory bank ID, 0–255
+	public static boolean[] flags = new boolean[8];    // [0] = Zero, [1] = Carry
 	
 	public static void push(int addr) {
 		if(stack[15] > 0) System.err.println("Stack overflow!");

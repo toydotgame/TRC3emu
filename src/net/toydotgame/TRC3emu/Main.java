@@ -55,12 +55,27 @@ public class Main {
 	
 	private static void printStatus() {
 		System.out.println();
-		System.out.println("PC: 0x" + Integer.toHexString(Computer.pc));
 		
-		System.out.println("Register file:");
+		System.out.println("PC: " + String.valueOf(Computer.pc));
+		
+		System.out.print("Stack: {");
+		for(int i = 0; i < Computer.stack.length; i++) {
+			String pointer = String.valueOf(Computer.stack[i]);
+			if(pointer.equals("0")) break;
+			
+			if(i == 0) System.out.print(pointer);
+			else System.out.print(", " + pointer);
+		}
+		System.out.println("}");
+		
+		System.out.println("Register file (0x):");
 		for(int i = 0; i < Computer.r.length; i++) { 
-			System.out.print(Integer.toHexString(Computer.r[i]) + " ");
-			if(i%4 == 3) System.out.println();
+			String value = Integer.toHexString(Computer.r[i]).toUpperCase();
+			if(value.length() == 1) value = " " + value;
+			System.out.print(value);
+			
+			if(i%4 != 3) System.out.print(" ");
+			else System.out.println();
 		}
 	}
 }

@@ -33,7 +33,8 @@ public class Instruction extends Computer {
 		&& opcode != "HLT"
 		&& opcode != "JMP"
 		&& opcode != "CAL"
-		&& opcode != "RET") pc++;
+		&& opcode != "RET"
+		&& opcode != "BRA") pc++;
 	}
 	
 	static void NOP() {
@@ -55,14 +56,36 @@ public class Instruction extends Computer {
 	}
 	
 	static void RET() {
-		pc = pop();
+		if(stack[0] == 0) pc++; // Effectively a NOP with an empty stack
+		else pc = pop();
 	}
 	
-	static void BRA(String cond, String addr) {}
+	static void BRA(String cond, String addr) {
+		boolean branch = false;
+		switch(cond) {
+			case "eq":
+				if(flags[0]) branch = true;
+			case "neq":
+				if(!flags[0]) branch = true;
+			case "c":
+				if(flags[1]) branch = true;
+			case "nc":
+				if(!flags[1]) branch = true;
+		}
+		
+		if(branch) pc = Integer.valueOf(addr);
+		else pc++;
+	}
 	
-	static void LDI(String reg, String imm) {}
+	static void LDI(String reg, String imm) {
+		int dest = Integer.valueOf(reg.substring(1));
+		r[dest] = memRead(Integer.valueOf(imm));
+	}
 	
-	static void ADI(String reg, String imm) {}
+	static void ADI(String reg, String imm) {
+		int dest = Integer.valueOf(reg.substring(1));
+		r[dest] += Integer.valueOf(imm);
+	}
 	
 	static void LOD(String reg, String addrReg, String offset) {}
 	
