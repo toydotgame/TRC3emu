@@ -79,17 +79,20 @@ public class Instruction extends Computer {
 	
 	static void LDI(String reg, String imm) {
 		int dest = Integer.valueOf(reg.substring(1));
+		if(dest == 0) return;
 		r[dest] = memRead(Integer.valueOf(imm));
 	}
 	
 	static void ADI(String reg, String imm) {
 		int dest = Integer.valueOf(reg.substring(1));
+		if(dest == 0) return;
 		r[dest] += Integer.valueOf(imm);
 	}
 	
 	static void LOD(String reg, String addrReg, String offset) {
 		int src = Integer.valueOf(addrReg.substring(1));
 		int dest = Integer.valueOf(reg.substring(1));
+		if(dest == 0) return;
 		int data = memRead(r[src]+Integer.valueOf(offset));
 		r[dest] = data;
 	}
@@ -104,40 +107,40 @@ public class Instruction extends Computer {
 		int a = r[Integer.valueOf(regA.substring(1))];
 		int b = r[Integer.valueOf(regB.substring(1))];
 		int c = a+b;
-		r[Integer.valueOf(outReg.substring(1))] = c;
+		regWrite(outReg, c);
 	}
 	
 	static void SUB(String regA, String regB, String outReg) {
 		int a = r[Integer.valueOf(regA.substring(1))];
 		int b = r[Integer.valueOf(regB.substring(1))];
 		int c = a-b;
-		r[Integer.valueOf(outReg.substring(1))] = c;
+		regWrite(outReg, c);
 	}
 	
 	static void RSH(String regA, String outReg) {
 		int a = r[Integer.valueOf(regA.substring(1))];
 		int c = a >>> 2;
-		r[Integer.valueOf(outReg.substring(1))] = c;
+		regWrite(outReg, c);
 	}
 	
 	static void NOR(String regA, String regB, String outReg) {
 		int a = r[Integer.valueOf(regA.substring(1))];
 		int b = r[Integer.valueOf(regB.substring(1))];
 		int c = ~(a|b);
-		r[Integer.valueOf(outReg.substring(1))] = c;
+		regWrite(outReg, c);
 	}
 	
 	static void AND(String regA, String regB, String outReg) {
 		int a = r[Integer.valueOf(regA.substring(1))];
 		int b = r[Integer.valueOf(regB.substring(1))];
 		int c = a&b;
-		r[Integer.valueOf(outReg.substring(1))] = c;
+		regWrite(outReg, c);
 	}
 	
 	static void XOR(String regA, String regB, String outReg) {
 		int a = r[Integer.valueOf(regA.substring(1))];
 		int b = r[Integer.valueOf(regB.substring(1))];
 		int c = a^b;
-		r[Integer.valueOf(outReg.substring(1))] = c;
+		regWrite(outReg, c);
 	}
 }

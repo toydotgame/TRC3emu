@@ -33,4 +33,10 @@ public class Computer {
 	public static void memWrite(int addr, int value) {
 		fullMem[bank][addr] = value;
 	}
+	
+	public static void regWrite(String outReg, int value) {
+		int dest = Integer.valueOf(outReg.substring(1)); 
+		if(dest == 0) return;
+		r[dest] = value;
+	}
 }
