@@ -80,7 +80,7 @@ public class Instruction extends Computer {
 	static void LDI(String reg, String imm) {
 		int dest = Integer.valueOf(reg.substring(1));
 		if(dest == 0) return;
-		r[dest] = memRead(Integer.valueOf(imm));
+		r[dest] = Integer.valueOf(imm);
 	}
 	
 	static void ADI(String reg, String imm) {
