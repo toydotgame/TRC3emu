@@ -1,6 +1,7 @@
 package net.toydotgame.TRC3emu;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,12 +57,17 @@ public class InstructionAssembler {
 		if(instruction.size() == 0) return returnString;
 		
 		int intOpcode = instruction.get(0);
-		String opcode = toPaddedBinary(intOpcode, 5);
-		returnString += opcode;
+		Main.currentAddress += 2; // Assuming it's a valid instruction by now, so we allocate this address
+		
+		if(intOpcode != 32) {
+			String opcode = toPaddedBinary(intOpcode, 5);
+			returnString += opcode;
+		}
 		
 		returnString += assembleOperands(intOpcode, instruction.subList(1, instruction.size()));
 		
 		try {
+			if(returnString.length() == 8) return returnString;
 			if(returnString.length() != 16) throw new StringIndexOutOfBoundsException(); // Hack to jump to catch() below if the string isn't what we want
 			return returnString.substring(0, 8) + " " + returnString.substring(8); // TODO: Flip for little endian
 		} catch(StringIndexOutOfBoundsException e) {
@@ -71,7 +77,14 @@ public class InstructionAssembler {
 	}
 	
 	private static String assembleOperands(int opcode, List<Integer> args) {
+		if(opcode == 32) return toPaddedBinary(args.get(0), 8); // Constant definition
+		
 		Integer type = operandTypes.get(opcode);
+		if(type == null) {
+			System.err.println("Invalid opcode at line " + Main.currentLine + "! Assembled to opcode " + opcode + ", which is undefined.");
+			System.exit(1);
+		}
+		
 		switch(type) {
 			case ALU:
 				if(!(args.size() == 2 && opcode == 11) && args.size() != 3) {
@@ -156,6 +169,12 @@ public class InstructionAssembler {
 	
 	public static String toPaddedBinary(int x, int length) {
 		return String.format("%" + length + "s", Integer.toBinaryString(x)).replace(" ", "0");
+	}
+	
+	public static String toPaddedHex(int x, int length) {
+		if(x < 0) return String.join("", Collections.nCopies(length, " "));
+		
+		return String.format("%" + length + "s", Integer.toHexString(x)).replace(" ", "0").toUpperCase();
 	}
 	
 	public static void exitIfOverflow(int max, List<Integer> values, String message) {

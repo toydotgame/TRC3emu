@@ -19,6 +19,7 @@ public class Main {
 	public static Map<String, Integer> instructions = loadInstructions();
 	public static Map<String, Integer> aliases = loadAliases();
 	public static int currentLine = 0;
+	public static int currentAddress = -2;
 	
 	private static Map<String, Integer> loadInstructions() {
 		String[] opcodes = {
@@ -115,13 +116,15 @@ public class Main {
 			// Weird hack because they aren't null nor empty strings
 			if(line[0].length() == 0) continue;
 			
-			List<String> outputLine = assembleLine(line);
+			List<String> outputLine = assembleLine(line); // Converts assembly to tokenised numerical machine code
 			//String print = String.join(" ", outputLine);
-			String print = InstructionAssembler.assembleInstruction(outputLine);
+			String print = InstructionAssembler.assembleInstruction(outputLine); // Converts machine code to valid TRC3 binary
 			
 			printRow(print, String.join(" ", line));
 			if(print.length() > 0) output.writeln(print);;
 		}
+		
+		System.out.println(aliases);
 
 		input.close();
 		output.close();
@@ -131,6 +134,42 @@ public class Main {
 		List<String> outputLine = new ArrayList<String>();
 
 		if(line[0].startsWith(";")) return outputLine; // Don't include comments
+		
+		if(line[0].startsWith(".")) { // Special handling for constant definitions
+			if(line.length > 2) {
+				System.err.println("Too many arguments for constant definition at line " + currentLine + "! Found " + String.valueOf(line.length-1) + ", should be 0 or 1.");
+				System.exit(1);
+			}
+			
+			// If there are no args, then we assume it's a label for a
+			// subroutine, so the label's value points to the next instruction.
+			// If there is 1 argument, we set the value of the label to that
+			// constant (unsigned 8-bit).
+			// Either way, the label is added to the `aliases` list, meaning
+			// when later instructions are parsed, calls to that label will
+			// yield the constant/address needed
+			
+			if(line.length == 1) {
+				aliases.put(line[0].substring(1), currentAddress+2); // Set label value to next address
+				
+				return outputLine;
+			}
+			
+			int value = 0;
+			try {
+				value = Integer.valueOf(line[1]);
+				if(value > 255 || value < 0) throw new NumberFormatException();
+			} catch(NumberFormatException e) {
+				System.err.println("Invalid value for constant definition \"" + line[0] + "\" (line " + currentLine + "): " + line[1] + ". Should be an integer in the range of 0-255.");
+				System.exit(1);
+			}
+			
+			aliases.put(line[0].substring(1), currentAddress+2);
+			outputLine.add("32"); // Make an out of bounds opcode for handling in the InstructionAssembler
+			outputLine.add(String.valueOf(value));
+			
+			return outputLine;
+		}
 		
 		// Only replace opcodes at index 0
 		Integer opcode = instructions.get(line[0].toUpperCase());
@@ -159,6 +198,7 @@ public class Main {
 		int col1Width = 21; // Total number of spaces in left column + padding
 		int padding = Math.max(0, col1Width-col1.length());
 		
+		System.out.print(InstructionAssembler.toPaddedHex(currentAddress, 4) + ": ");
 		System.out.print(col1);
 		System.out.print(String.join("", Collections.nCopies(padding, " "))); // Hack creating an arr/collection of `padding` # of ' ' chars
 		System.out.println(col2);
