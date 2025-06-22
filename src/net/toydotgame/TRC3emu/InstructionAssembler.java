@@ -49,7 +49,7 @@ public class InstructionAssembler {
 					String arrows = String.format("%" + instructionAsString.get(i).length() + "s", "").replace(" ", "^");
 					System.err.print(arrows + "--- Unknown instruction");
 				} else System.err.print("Unknown keyword \"" + instructionAsString.get(i) + "\"");
-				System.err.println(" at line " + Main.currentLine + "! Output file will be incomplete or corrupt.");
+				System.err.println(" at line " + OldMain.currentLine + "! Output file will be incomplete or corrupt.");
 				System.exit(1);
 			}
 		}
@@ -57,7 +57,7 @@ public class InstructionAssembler {
 		if(instruction.size() == 0) return returnString;
 		
 		int intOpcode = instruction.get(0);
-		Main.currentAddress += 2; // Assuming it's a valid instruction by now, so we allocate this address
+		OldMain.currentAddress += 2; // Assuming it's a valid instruction by now, so we allocate this address
 		
 		if(intOpcode != 32) {
 			String opcode = toPaddedBinary(intOpcode, 5);
@@ -71,7 +71,7 @@ public class InstructionAssembler {
 			if(returnString.length() != 16) throw new StringIndexOutOfBoundsException(); // Hack to jump to catch() below if the string isn't what we want
 			return returnString.substring(0, 8) + " " + returnString.substring(8); // TODO: Flip for little endian
 		} catch(StringIndexOutOfBoundsException e) {
-			System.err.println("v Couldn't pretty-print line " + Main.currentLine + "! v");
+			System.err.println("v Couldn't pretty-print line " + OldMain.currentLine + "! v");
 			return returnString;
 		}
 	}
@@ -81,17 +81,17 @@ public class InstructionAssembler {
 		
 		Integer type = operandTypes.get(opcode);
 		if(type == null) {
-			System.err.println("Invalid opcode at line " + Main.currentLine + "! Assembled to opcode " + opcode + ", which is undefined.");
+			System.err.println("Invalid opcode at line " + OldMain.currentLine + "! Assembled to opcode " + opcode + ", which is undefined.");
 			System.exit(1);
 		}
 		
 		switch(type) {
 			case ALU:
 				if(!(args.size() == 2 && opcode == 11) && args.size() != 3) {
-					System.err.println("Wrong number of arguments for ALU/RAM operation at line " + Main.currentLine + "! Found " + args.size() + ", should be 3 (or 2 for right shift operations).");
+					System.err.println("Wrong number of arguments for ALU/RAM operation at line " + OldMain.currentLine + "! Found " + args.size() + ", should be 3 (or 2 for right shift operations).");
 					System.exit(1);
 				}
-				exitIfOverflow(7, args, "Register address(es) or 3-bit immediate too large at line " + Main.currentLine + "!: " + args);
+				exitIfOverflow(7, args, "Register address(es) or 3-bit immediate too large at line " + OldMain.currentLine + "!: " + args);
 				
 				String a, b, c;
 				if(args.size() == 3) {
@@ -107,43 +107,43 @@ public class InstructionAssembler {
 				return "00" + a + b + c;
 			case IMM8_TO_REG:
 				if(args.size() != 2) {
-					System.err.println("Wrong number of arguments for operation at line " + Main.currentLine + "! Found " + args.size() + ", should be 2.");
+					System.err.println("Wrong number of arguments for operation at line " + OldMain.currentLine + "! Found " + args.size() + ", should be 2.");
 					System.exit(1);
 				}
-				exitIfOverflow(255, args.get(0), "8-bit immediate too large at line " + Main.currentLine + "!: " + args.get(0));
-				exitIfOverflow(7, args.get(1), "Register address too large at line " + Main.currentLine + "!: " + args.get(1));
+				exitIfOverflow(255, args.get(0), "8-bit immediate too large at line " + OldMain.currentLine + "!: " + args.get(0));
+				exitIfOverflow(7, args.get(1), "Register address too large at line " + OldMain.currentLine + "!: " + args.get(1));
 				
 				return toPaddedBinary(args.get(0), 8) + toPaddedBinary(args.get(1), 3);
 			case IMM10:
 				if(args.size() != 1) {
-					System.err.println("Wrong number of arguments for jump/branch operation at line " + Main.currentLine + "! Found " + args.size() + ", should be 1.");
+					System.err.println("Wrong number of arguments for jump/branch operation at line " + OldMain.currentLine + "! Found " + args.size() + ", should be 1.");
 					System.exit(1);
 				}
-				exitIfOverflow(1023, args.get(0), "10-bit immediate too large at line " + Main.currentLine + "!: " + args.get(0));
+				exitIfOverflow(1023, args.get(0), "10-bit immediate too large at line " + OldMain.currentLine + "!: " + args.get(0));
 				
 				return toPaddedBinary(args.get(0), 10) + "0"; // End of jumps is always 0 due to instruction alignment in memory
 			case IMM3_TO_REG:
 				if(args.size() != 2) {
-					System.err.println("Wrong number of arguments for IO in operation at line " + Main.currentLine + "! Found " + args.size() + ", should be 2.");
+					System.err.println("Wrong number of arguments for IO in operation at line " + OldMain.currentLine + "! Found " + args.size() + ", should be 2.");
 					System.exit(1);
 				}
-				exitIfOverflow(7, args, "3-bit immediate/register address too large at line " + Main.currentLine + "!: " + args);
+				exitIfOverflow(7, args, "3-bit immediate/register address too large at line " + OldMain.currentLine + "!: " + args);
 				
 				return "00000" + toPaddedBinary(args.get(0), 3) + toPaddedBinary(args.get(1), 3);
 			case REG_TO_IMM3:
 				if(args.size() != 2) {
-					System.err.println("Wrong number of arguments for IO out operation at line " + Main.currentLine + "! Found " + args.size() + ", should be 2.");
+					System.err.println("Wrong number of arguments for IO out operation at line " + OldMain.currentLine + "! Found " + args.size() + ", should be 2.");
 					System.exit(1);
 				}
-				exitIfOverflow(7, args, "3-bit immediate/register address too large at line " + Main.currentLine + "!: " + args);
+				exitIfOverflow(7, args, "3-bit immediate/register address too large at line " + OldMain.currentLine + "!: " + args);
 				
 				return "00" + toPaddedBinary(args.get(0), 3) + toPaddedBinary(args.get(1), 3) + "000";
 			case IMM3_OR_REG:
 				if(args.size() != 1 && args.size() != 2) {
-					System.err.println("Wrong number of arguments for Set page operation at line " + Main.currentLine + "! Found " + args.size() + ", should be 1 or 2.");
+					System.err.println("Wrong number of arguments for Set page operation at line " + OldMain.currentLine + "! Found " + args.size() + ", should be 1 or 2.");
 					System.exit(1);
 				}
-				exitIfOverflow(7, args, "3-bit immediate/register address too large at line " + Main.currentLine + "!: " + args);
+				exitIfOverflow(7, args, "3-bit immediate/register address too large at line " + OldMain.currentLine + "!: " + args);
 				
 				if(args.size() == 1) { // 1 argument, we assume a register always
 					return "00000" + toPaddedBinary(args.get(0), 3) + "000";
@@ -152,16 +152,16 @@ public class InstructionAssembler {
 				}
 			case REG_ONLY:
 				if(args.size() != 1) {
-					System.err.println("Wrong number of arguments for Set page operation at line " + Main.currentLine + "! Found " + args.size() + ", should be 1.");
+					System.err.println("Wrong number of arguments for Set page operation at line " + OldMain.currentLine + "! Found " + args.size() + ", should be 1.");
 					System.exit(1);
 				}
-				exitIfOverflow(7, args.get(0), "3-bit register address too large at line " + Main.currentLine + "!: " + args.get(0));
+				exitIfOverflow(7, args.get(0), "3-bit register address too large at line " + OldMain.currentLine + "!: " + args.get(0));
 				
 				return "00000000" + toPaddedBinary(args.get(0), 3);
 			default:
 				// This error should not be reached but just in case (and we
 				// need a default case anyway):
-				System.err.println("Unknown instruction type at line " + Main.currentLine + "!");
+				System.err.println("Unknown instruction type at line " + OldMain.currentLine + "!");
 			case NONE:
 				return toPaddedBinary(0, 11);
 		}
