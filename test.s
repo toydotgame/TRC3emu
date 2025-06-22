@@ -12,6 +12,7 @@ AND r1 r2 r3
 NAN r1 r2 r3
 RSH r1 r2    ; RSH technically an ADD, then shift
 RSH r1 r2 r3
+RSH r1 r2
 LDI 255 r1
 JMP 1023
 BEQ 1023

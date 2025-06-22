@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import net.toydotgame.TRC3emu.io.FlushedFileWriter;
+import net.toydotgame.io.FlushedFileWriter;
 
 public class Main {
 	private static File inFile, outFile;

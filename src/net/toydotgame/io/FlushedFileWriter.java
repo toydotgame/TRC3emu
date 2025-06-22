@@ -1,4 +1,4 @@
-package net.toydotgame.TRC3emu.io;
+package net.toydotgame.io;
 
 import java.io.File;
 import java.io.FileDescriptor;
