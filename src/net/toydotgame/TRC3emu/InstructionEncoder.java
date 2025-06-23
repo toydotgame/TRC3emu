@@ -114,12 +114,4 @@ public class InstructionEncoder {
 		
 		return instruction;
 	}
-	
-	private static String[] intArrToString(int[] arr) {
-		String[] strArr = new String[arr.length];
-		for(int i = 0; i < arr.length; i++)
-			strArr[i] = String.valueOf(arr[i]);
-		
-		return strArr;
-	}
 }
