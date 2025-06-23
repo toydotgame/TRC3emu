@@ -1,4 +1,4 @@
-package net.toydotgame.TRC3emu;
+package net.toydotgame.TRC3emu.old;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 import net.toydotgame.io.FlushedFileWriter;
 
-public class OldMain {
+public class Main {
 	private static File inFile, outFile;
 	private static Scanner input;
 	private static FlushedFileWriter output;

@@ -1,4 +1,4 @@
-package net.toydotgame.TRC3emu;
+package net.toydotgame.TRC3emu.old;
 
 public class Utils {
 	public static String paddedBinary(int x, int len) {
