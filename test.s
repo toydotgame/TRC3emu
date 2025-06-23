@@ -1,18 +1,15 @@
 ; TRC3 example operations
 ; Comment 2
 .helloworld 255
-.label2 1
-
-.label4
+.label2 255
+.label3 1
 NOP
 HLT
 ; Comment 3
 ADD r1 r2 r3
 ADI 255 r1
-ADI 256 r1
-ADI 12 r13
-ADI 15 19
-
+;ADI 256 r1
+ADI 15 7
 
 SUB r1 r2 r3
 XOR r1 r2 r3
@@ -25,7 +22,7 @@ RSH r1 r2    ; RSH technically an ADD, then shift
 RSH r1 r2 r3
 RSH r1 r2
 LDI 255 r1
-JMP 1023
+JMP label3
 BEQ 1023
 BNE 1023
 BGT 1023
