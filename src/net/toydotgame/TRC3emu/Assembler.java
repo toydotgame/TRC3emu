@@ -32,6 +32,8 @@ public class Assembler {
 		for(int i = 0; i <= 7; i++) map.put("r" + i, i); // Initialise 8 registers
 		return map;
 	}
+	// Map of key: input file line # to value: instruction # 
+	public static Map<Integer, Integer> instructionMappings = new HashMap<Integer, Integer>();
 	
 	public static List<String> main(List<String> input) {
 		// Follow an iterative process, assembling one line at a time
@@ -60,6 +62,7 @@ public class Assembler {
 			
 			// Finally, line is not null. Add the assembled instruction to our output
 			output.add(line);
+			instructionMappings.put(lineIndex-1, output.size()-1);
 		}
 		
 		return output;
@@ -78,7 +81,7 @@ public class Assembler {
 		String[] lineArr = line.split(" ");
 		Integer opcode = instructions.get(lineArr[0]); // Allow null values
 		if(opcode == null) {
-			Utils.printErrForLine(line, "Unknown mnemonic \"" + lineArr[0] + "\"!");
+			Utils.printErr(line, "Unknown mnemonic \"" + lineArr[0] + "\"!");
 			return null;
 		}
 		
@@ -95,7 +98,7 @@ public class Assembler {
 		if(line.startsWith(".")) { // Define new alias
 			// Error state: wrong # of args
 			if(lineArr.length != 2) {
-				Utils.printErrForLine(line, "Wrong number of arguments for alias definition! Should be 1, found " + String.valueOf(lineArr.length-1) + ".");
+				Utils.printErr(line, "Wrong number of arguments for alias definition! Should be 1, found " + String.valueOf(lineArr.length-1) + ".");
 				return null;
 			}
 			
@@ -103,7 +106,7 @@ public class Assembler {
 			String alias = lineArr[0].substring(1); // Remove '.'
 			Integer fetchedAlias = aliases.get(alias); // Allow null
 			if(fetchedAlias != null) {
-				Utils.printErrForLine(line, "Alias \"" + alias + "\" already defined!");
+				Utils.printErr(line, "Alias \"" + alias + "\" already defined!");
 				return null;
 			}
 			
@@ -112,7 +115,7 @@ public class Assembler {
 				aliases.put(alias, Integer.valueOf(lineArr[1]));
 				return null; // Not a syntax error, but we don't want this line in the assembled output
 			} catch(NumberFormatException e) {
-				Utils.printErrForLine(line, "Failed defining constant! Invalid literal \"" + lineArr[1] + "\".");
+				Utils.printErr(line, "Failed defining constant! Invalid literal \"" + lineArr[1] + "\".");
 				return null;
 			}
 		} // Else, check for aliases within instructions
@@ -123,7 +126,7 @@ public class Assembler {
 			
 			Integer fetchedAlias = aliases.get(token);
 			if(fetchedAlias == null) {
-				Utils.printErrForLine(line, "Unknown alias \"" + token + "\"!");
+				Utils.printErr(line, "Unknown alias \"" + token + "\"!");
 				return null;
 			}
 			

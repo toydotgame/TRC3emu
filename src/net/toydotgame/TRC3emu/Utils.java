@@ -1,6 +1,8 @@
 package net.toydotgame.TRC3emu;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Utils {
@@ -41,20 +43,25 @@ public class Utils {
 		System.out.println(message);
 	}
 	
-	public static String nChars(String inputString, char charToUse) {
-		if(inputString.length() == 0) return String.valueOf(charToUse);
+	public static String nChars(int n, char charToUse) {
+		String strToUse = String.valueOf(charToUse);
+		if(n <= 0) return strToUse;
 
 		//return String.format("%" + inputString.length() + "s", "").replace(" ", String.valueOf(charToUse));
-		return inputString.replaceAll(".", String.valueOf(charToUse));
+		//return inputString.replaceAll(".", String.valueOf(charToUse));
+		return String.join("", Collections.nCopies(n, strToUse));
 	}
 	
 	// Pass null or empty string for line and just get the message without pretty stuff
-	public static void printErrForLine(String line, String message) {
+	public static void printErr(String line, String message) {
 		if(line != null && line.length() > 0) {
 			System.err.println(line);
-			System.err.println(nChars(line, '^') + "\n\t" + Assembler.lineIndex  + ": " + message);
+			System.err.println(nChars(line.length(), '^') + "\n\t" + Assembler.lineIndex  + ": " + message);
 		} else System.err.println(Assembler.lineIndex  + ": " + message);
 		Assembler.syntaxErrors++;
+	}
+	public static void printErr(String message) {
+		printErr(null, message);
 	}
 	
 	public static boolean isNumeric(String str) {
@@ -101,5 +108,77 @@ public class Utils {
 		for(int i = 0; i < args.length; i++) args[i] = Integer.parseInt(lineArr[i+1]);
 		
 		return args;
+	}
+	
+	public static void checkBinary(List<String> binary) {
+		boolean error = false;
+		String errorMessage = "Compiled binary mangled!";
+		
+		if(!checkByteAlignment(binary)) {
+			errorMessage += " Bytes do not align.";
+			error = true;
+		}
+		
+		for(String i : binary) {
+			if(!i.matches("[01]+")) {
+				errorMessage += " Contents are not entirely binary.";
+				error = true;
+			}
+		}
+		
+		if(error) printErr(errorMessage);
+	}
+	
+	// Return true/false if list is made of even 8-bit words or not
+	public static boolean checkByteAlignment(List<String> byteStream) {
+		for(String i : byteStream)
+			if(i.length()%8 != 0) return false;
+		
+		return true;
+	}
+	
+	public static int countBytes(List<String> byteStream) {
+		return String.join("", byteStream).length()/8;
+	}
+	
+	// Uses Assembler.instructionMappings to pretty-print a table of conversions
+	// made during assembly. The source file listing should always be bigger
+	// than the output binary
+	public static void printAssembly(List<String> source, List<String> binary) {
+		if(!Main.verbose) return; // Save from further processing
+		
+		Map<Integer, Integer> map = Assembler.instructionMappings;
+		
+		for(int i = 0; i < source.size(); i++) {
+			String srcLine = source.get(i);
+			if(srcLine.length() == 0) continue; // Why bother printing gaps
+			
+			Integer asmAddress = map.get(i);
+			
+			if(asmAddress == null) {
+				System.out.print("      ");
+				colPrint(null, srcLine);
+				continue;
+			}
+			
+			System.out.print(String.format("%04d", asmAddress+1) + ": ");
+			
+			String asmLine = binary.get(asmAddress);
+			if(asmLine.length()/8 == 2)
+				asmLine = asmLine.substring(0, 8) + " " + asmLine.substring(8);
+			colPrint(asmLine, srcLine);
+		}
+	}
+	
+	private static void colPrint(String str1, String str2) {
+		final int col1Width = 21;
+		if(str1 == null) str1 = "";
+		if(str2 == null) str2 = "";
+		int padding = col1Width-str1.length();
+		if(padding <= 0) padding = 1;
+		
+		System.out.print(str1);
+		System.out.print(nChars(padding, ' '));
+		System.out.println(str2);
 	}
 }

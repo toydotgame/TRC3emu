@@ -116,18 +116,32 @@ public class Main {
 		}
 		
 		System.out.println(" Done!");
-		Utils.verboseLog(lines.size() + " lines read.");
 		
+		// Assemble:
 		List<String> instructionList = Assembler.main(lines);
+		Utils.verboseLog(lines.size() + " lines read => " + instructionList.size() + " instructions.");
 		
-		Utils.verboseLog("Assembled to:");
-		for(String i : instructionList) Utils.verboseLog(i);
-		Utils.verboseLog("Aliases:\n" + Assembler.aliases);
+		Utils.printAssembly(lines, instructionList); // Won't print without -v
+			
+		
+		Utils.verboseLog("Checking compiled binary alignment...");
+		Utils.checkBinary(instructionList); // Raises syntaxErrors count
 		
 		if(Assembler.syntaxErrors > 0) {
 			System.err.println(Assembler.syntaxErrors + " errors present. Output will not be written.");
 			System.exit(1);
 		}
+		
+		// Now, there are no errors, and the instructionList is a
+		// valid stream of bytes
+		
+		int length = Utils.countBytes(instructionList);
+		System.out.println("Completed binary size: " + length + " B");
+		if(length == 0) {
+			System.err.println("No binary exists to write!");
+			System.exit(1);
+		} else if(length > 2048)
+			System.err.println("This binary exceeds the maximum space available in TRC3's RAM! You will not be able to run this in Minecraft.");
 		
 		// TODO: File output
 	}
