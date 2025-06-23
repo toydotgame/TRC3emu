@@ -2,7 +2,6 @@ package net.toydotgame.TRC3emu;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +94,7 @@ public class Main {
 				inputPath = cmdline.getOptionValue("a");
 				
 				if(cmdline.hasOption("o"))
-					outputPath = cmdline.getOptionValue("0");
+					outputPath = cmdline.getOptionValue("o");
 				else
 					outputPath = inputPath.split("\\.", 2)[0] + ".bin";
 			} else if(cmdline.hasOption("e")) {
@@ -136,7 +135,8 @@ public class Main {
 		
 		// Assemble:
 		List<String> instructionList = Assembler.main(lines);
-		Utils.verboseLog(lines.size() + " lines read => " + instructionList.size() + " instructions.");
+		Utils.verboseLog(lines.size() + " lines read => " + instructionList.size() + " instructions");
+		Utils.verboseLog(Assembler.aliases.size()-8 + " aliases defined.");
 		
 		Utils.printAssembly(lines, instructionList); // Won't print without -v
 		
@@ -158,6 +158,10 @@ public class Main {
 			System.exit(1);
 		} else if(length > 2048)
 			System.err.println("This binary exceeds the maximum space available in TRC3's RAM! You will not be able to run this in Minecraft.");
+		
+		// Convert the list of 16-bit instructions and 8-bit values to an 8-bit
+		// memory listing: Instructions are encoded as little endian
+		instructionList = Assembler.malloc(instructionList);
 		
 		// Write to output file:
 		System.out.println("Preparing to write...");

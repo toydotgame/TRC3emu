@@ -144,4 +144,35 @@ public class Assembler {
 		// Instruction is already validated, so we just encode it to binary:
 		return InstructionEncoder.main(line);
 	}
+	
+	// Converts 16-bit instructions to 2 8-bit words (little endian) and
+	// condenses 8-bit memory values
+	public static List<String> malloc(List<String> instructionList) {
+		List<String> memory = new ArrayList<String>();
+		
+		for(String word : instructionList) {
+			switch(word.length()/8) { // # of bytes in word
+				case 1:
+					// TODO: Implement storage of 8-bit literals (probably needs
+					// new assembler syntax)
+					// TODO: Set up less wasteful way below of moving around
+					// 8-bit literals so that pushing empty bytes is needed less
+					memory.add(word); // TODO: The assembler doesn't even generate 8-bit words so this isn't reached
+					break;
+				case 2:
+					if(memory.size()%2 != 0) // Push an empty byte to align
+						memory.add(Utils.paddedBinary(0, 8));
+					// Push lo byte, then hi byte
+					memory.add(word.substring(8));
+					memory.add(word.substring(0, 8));
+					break;
+				default:
+					System.err.println("Unable to allocate memory for word 0b" + word + "! Should be 1 or 2 bytes.");
+					System.exit(2);
+					return null; // The compiler. It knows where I live. I must appease it.
+			}
+		}
+		
+		return memory;
+	}
 }
