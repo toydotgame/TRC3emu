@@ -2,7 +2,7 @@
 ; Comment 2
 .helloworld 255
 .label2 255
-.label3 1
+#label3 1
 NOP
 HLT
 ; Comment 3
@@ -10,7 +10,9 @@ ADD r1 r2 r3
 ADI 255 r1
 ;ADI 256 r1
 ADI 15 7
+adi 12 1
 
+subroutine:
 SUB r1 r2 r3
 XOR r1 r2 r3
 XNO r1 r2 r3

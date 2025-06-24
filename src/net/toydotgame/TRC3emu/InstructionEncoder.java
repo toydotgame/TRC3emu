@@ -37,7 +37,7 @@ public class InstructionEncoder {
 			default:
 				// This should be COMPLETELY unreachable, but I'm adding this
 				// just to keep the compiler happy
-				Utils.printErr("Unknown error occured when trying to encode an instruction of an unkown type!");
+				System.err.println("Unknown error occured when trying to encode an instruction of an unkown type!");
 				System.exit(2);
 				return null;
 		}

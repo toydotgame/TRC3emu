@@ -14,7 +14,7 @@ public class InstructionValidator {
 		Integer opcode = Utils.getOpcode(line);
 		Integer type = Utils.getType(opcode);
 		if(type == null) { // Being a little over-protectice and safe with this handling but idc
-			Utils.printErr(line, "Instruction type not set for the instruction \"" + line.split(" ")[0] + "\"! (Opcode " + opcode + ")");
+			Utils.printAssemberSyntaxErr(line, "Instruction type not set for the instruction \"" + line.split(" ")[0] + "\"! (Opcode " + opcode + ")");
 			System.exit(2); // printErrForLine() changes the syntaxError count but we don't care because this is a fatal internal error
 		}
 		int[] args = Utils.getArgs(line);
@@ -39,7 +39,7 @@ public class InstructionValidator {
 				// This should never be reached normally, because it means
 				// `type` is not null (handled above) but also not accounted for
 				// /implemented in this switch() case
-				Utils.printErr(line, "Type constant " + type + " invalid!");
+				Utils.printAssemberSyntaxErr(line, "Type constant " + type + " invalid!");
 				System.exit(2);
 				return null; // Make compiler happy
 		}
@@ -48,7 +48,7 @@ public class InstructionValidator {
 	private static String validateALU(int opcode, int[] args) {
 		if(opcode != 11 && failArgsLength(3, args)) return null;
 		else if(args.length != 2 && args.length != 3) { // RSH case
-			Utils.printErr("Wrong number of arguments for instruction! Should be 2 or 3, found " + args.length + ".");
+			Utils.printAssemberSyntaxErr("Wrong number of arguments for instruction! Should be 2 or 3, found " + args.length + ".");
 			return null;
 		} // Else, is a valid RSH or other ALU instruction
 		if(failUnderOverflow(7, args)) return null;
@@ -86,7 +86,7 @@ public class InstructionValidator {
 		} else if(args.length <= 0 || args.length > 2) {
 			// Special error message for PAS instead of
 			// validateImm3Reg()'s 2 argument specification
-			Utils.printErr("Wrong number of arguments for instruction! Should be 1 or 2, found " + args.length + ".");
+			Utils.printAssemberSyntaxErr("Wrong number of arguments for instruction! Should be 1 or 2, found " + args.length + ".");
 			return null;
 		}
 		
@@ -104,7 +104,7 @@ public class InstructionValidator {
 	private static boolean failArgsLength(int length, int[] args) {
 		if(args.length == length) return false;
 		
-		Utils.printErr("Wrong number of arguments for instruction! Should be " + length + ", found " + args.length + ".");
+		Utils.printAssemberSyntaxErr("Wrong number of arguments for instruction! Should be " + length + ", found " + args.length + ".");
 		return true;
 	}
 	
@@ -113,7 +113,7 @@ public class InstructionValidator {
 	private static boolean failUnderOverflow(int max, int[] args) {
 		for(int i = 0; i < args.length; i++) {
 			if(args[i] < 0 || args[i] > max) {
-				Utils.printErr(args[i] + " out of bounds! Should be within 0-" + max + " inclusive.");
+				Utils.printAssemberSyntaxErr(args[i] + " out of bounds! Should be within 0-" + max + " inclusive.");
 				return true;
 			}
 		}

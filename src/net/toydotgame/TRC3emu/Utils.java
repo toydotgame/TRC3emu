@@ -53,15 +53,26 @@ public class Utils {
 	}
 	
 	// Pass null or empty string for line and just get the message without pretty stuff
-	public static void printErr(String line, String message) {
+	public static void printAssemberSyntaxErr(String line, String message) {
 		if(line != null && line.length() > 0) {
 			System.err.println(line);
 			System.err.println(nChars(line.length(), '^') + "\n\t" + Assembler.lineIndex  + ": " + message);
 		} else System.err.println(Assembler.lineIndex  + ": " + message);
 		Assembler.syntaxErrors++;
 	}
-	public static void printErr(String message) {
-		printErr(null, message);
+	public static void printAssemberSyntaxErr(String message) {
+		printAssemberSyntaxErr(null, message);
+	}
+	
+	public static void printLinkerSyntaxErr(String line, String message) {
+		if(line != null && line.length() > 0) {
+			System.err.println(line);
+			System.err.println(nChars(line.length(), '^') + "\n\t" + message);
+		} else System.err.println(message);
+		Linker.syntaxErrors++;
+	}
+	public static void printLinkerSyntaxErr(String message) {
+		printLinkerSyntaxErr(null, message);
 	}
 	
 	public static boolean isNumeric(String str) {
@@ -110,23 +121,13 @@ public class Utils {
 		return args;
 	}
 	
-	public static void checkBinary(List<String> binary) {
-		boolean error = false;
-		String errorMessage = "Compiled binary mangled!";
+	public static boolean checkBinary(List<String> binary) {
+		if(!checkByteAlignment(binary)) return false;
 		
-		if(!checkByteAlignment(binary)) {
-			errorMessage += " Bytes do not align.";
-			error = true;
-		}
-		
-		for(String i : binary) {
-			if(!i.matches("[01]+")) {
-				errorMessage += " Contents are not entirely binary.";
-				error = true;
-			}
-		}
-		
-		if(error) printErr(errorMessage);
+		for(String i : binary)
+			if(!i.matches("[01]+")) return false;
+
+		return true;
 	}
 	
 	// Return true/false if list is made of even 8-bit words or not
