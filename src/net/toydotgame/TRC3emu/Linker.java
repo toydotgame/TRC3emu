@@ -42,14 +42,28 @@ public class Linker {
 			System.exit(1);
 		}
 		// 3. Substitute in definitions
-		List<String> output = new ArrayList<>();
+		List<String> output = parseInstructionsAndSubroutines();
+		for(Integer constant : definitions.values())
+			output.add(String.valueOf(constant));
+		// TODO: Substitution of references to either subroutine labels or constant
+		// definitions.
+		// Will need:
+		// * Error checking when combining lists of subroutines+definitions to
+		//   ensure no name clashes (should be handled by assembler so this error
+		//   is fatal)
+		// * Map of const definitions to their space in memory, because references
+		//   should be to that memory address after all (not the value of the
+		//   constant, which should only be stored in the byte stream output)
 		
 		// 6. Convert to binary string
 		//line = convertToBinary(line);
 		//if(line == null) continue;		
 		
-		for(String i : input) System.out.println(i);
+		//for(String i : output) System.out.println(i);
+		for(int i = 0; i < output.size(); i++)
+			System.out.println(i + ": " + output.get(i));
 		System.out.println(definitions);
+		System.out.println(subroutines);
 		return output;
 	}
 	
@@ -67,22 +81,48 @@ public class Linker {
 	}
 	
 	private static void parseConstants() {
-		int constantCount = 0; // Count the number of constants we define
-		
 		for(int i = 0; i < input.size(); i++) {
 			String line = input.get(i);
 			if(!line.startsWith(".")) continue;
+			String[] lineArr = line.split(" ");
 			
-			String constantName = line.split(" ")[0].substring(1);			
+			String constantName = lineArr[0].substring(1);			
 			if(definitions.containsKey(constantName)) {
 				Utils.printLinkerSyntaxErr(line, "Constant \"" + constantName + "\" already defined!");
 				continue;
 			}
 			
-			definitions.put(constantName, constantCount++);
+			Integer value;
+			try {
+				value = Integer.valueOf(lineArr[1]);
+				if(value < 0 || value > 255) throw new NumberFormatException();
+			} catch(NumberFormatException e) {
+				Utils.printLinkerSyntaxErr(line, "Invalid literal for constant \"" + constantName + "\"! Should be 0-255.");
+				continue;
+			}
+			
+			definitions.put(constantName, value);
 			input.remove(i);
 			i--; // Compensate for the fact we just removed the element at this index
 		}
+	}
+	
+	private static List<String> parseInstructionsAndSubroutines() {
+		List<String> output = new ArrayList<String>();
+		int instructionCount = 0;
+		
+		for(String line : input) {
+			if(line.endsWith(":")) { // Define subroutine
+				String subroutineName = line.substring(0, line.length()-1);
+				subroutines.put(subroutineName, instructionCount<<1); // Adjust for 2 bytes per instruction
+				continue;
+			} // Else, parse instruction
+			
+			output.add(line);
+			instructionCount++;
+		}
+		
+		return output;
 	}
 	
 	private static String convertToBinary(String line) {

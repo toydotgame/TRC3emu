@@ -1,7 +1,7 @@
 ; TRC3 example operations
 ; Comment 2
 .helloworld 255
-.label2 255
+.label2 2
 #label3 1
 NOP
 HLT
