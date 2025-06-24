@@ -125,6 +125,7 @@ public class Assembler {
 			}
 		} // Else, check for aliases within instructions
 		
+		// TODO: Remove this syntax checking and make InstructionValidator a Linker thing
 		for(int i = 1; i < lineArr.length; i++) {
 			String token = lineArr[i];
 			if(Utils.isNumeric(token)) continue;
