@@ -14,7 +14,7 @@ public class InstructionValidator {
 		Integer opcode = Utils.getOpcode(line);
 		Integer type = Utils.getType(opcode);
 		if(type == null) { // Being a little over-protectice and safe with this handling but idc
-			Utils.printAssemberSyntaxErr(line, "Instruction type not set for the instruction \"" + line.split(" ")[0] + "\"! (Opcode " + opcode + ")");
+			Utils.printAssemblerSyntaxErr(line, "Instruction type not set for the instruction \"" + line.split(" ")[0] + "\"! (Opcode " + opcode + ")");
 			System.exit(2); // printErrForLine() changes the syntaxError count but we don't care because this is a fatal internal error
 		}
 		int[] args = Utils.getArgs(line);
@@ -39,7 +39,7 @@ public class InstructionValidator {
 				// This should never be reached normally, because it means
 				// `type` is not null (handled above) but also not accounted for
 				// /implemented in this switch() case
-				Utils.printAssemberSyntaxErr(line, "Type constant " + type + " invalid!");
+				Utils.printAssemblerSyntaxErr(line, "Type constant " + type + " invalid!");
 				System.exit(2);
 				return null; // Make compiler happy
 		}

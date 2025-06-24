@@ -1,4 +1,4 @@
-package net.toydotgame.TRC3emu;
+package net.toydotgame.io;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import net.toydotgame.io.FlushedFileWriter;
+import net.toydotgame.TRC3emu.Utils;
 
 public class FileHandler extends Utils {
 	private File file;
@@ -16,7 +16,7 @@ public class FileHandler extends Utils {
 	public static final int READ = 0;
 	public static final int WRITE = 1;
 
-	FileHandler(String path, int mode) {
+	public FileHandler(String path, int mode) {
 		this.file = new File(path);
 		
 		this.mode = mode;

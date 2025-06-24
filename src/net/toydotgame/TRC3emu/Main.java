@@ -1,11 +1,6 @@
 package net.toydotgame.TRC3emu;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -14,7 +9,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import net.toydotgame.io.FlushedFileWriter;
+import net.toydotgame.io.FileHandler;
 
 public class Main {
 	// Cmdline args yield these settings
@@ -31,11 +26,15 @@ public class Main {
 		// Setup options and check them immediately, storing values into variables:
 		Options options = setupOptions();
 		checkOptions(options, args); // Exits with return code 1 if flags are invalid
+		// TODO: Nicer logging implementation for this damn thing
 		
 		switch(mode) {
+			case ASSEMBLE_AND_LINK:
 			case ASSEMBLE:
 				assemble();
-				break;
+				if(mode == ASSEMBLE) break;
+				// outputPath is blindly the extension-stripped value of inputPath
+				inputPath = outputPath + ".o";
 			case LINK:
 				link();
 				break;
@@ -56,16 +55,18 @@ public class Main {
 		Option assemble = Option.builder("a")
 			.longOpt("assemble")
 			.desc("Assemble a TRC3 assembly source file.")
-			.hasArg()
-			.argName("source")
+			.hasArg().argName("source")
 			.build();
 		Option link = Option.builder("l")
 			.longOpt("link")
 			.desc("Link an object file to create a binary.")
-			.hasArg()
-			.argName("object")
+			.hasArg().argName("object")
 			.build();
-		// TODO: -c, --assemble-and-link to call both
+		Option assembleAndLink = Option.builder("c")
+			.longOpt("assemble-and-link")
+			.desc("Same as TRC3emu -a <file> && TRCemu -l <file>. Assembles a source to a binary.")
+			.hasArg().argName("source")
+			.build();
 		Option emulate = Option.builder("e")
 			.longOpt("emulate")
 			.desc("Emulate a previously created binary.")
@@ -74,6 +75,7 @@ public class Main {
 			.build();
 		mode.addOption(assemble);
 		mode.addOption(link);
+		mode.addOption(assembleAndLink);
 		mode.addOption(emulate);
 		mode.setRequired(true);
 		
@@ -85,9 +87,8 @@ public class Main {
 		
 		Option output = Option.builder("o")
 			.longOpt("output")
-			.desc("(Optional) Output binary file. This option is ignored when -a, --assemble is not set. Defaults to a .o/.bin of the same name as the input source file. Specified extensions are included, but will always have .o/.bin appended.")
-			.hasArg()
-			.argName("destination")
+			.desc("(Optional) Output binary file. This option is ignored when -e, --emulate is set. Defaults to a .o/.bin of the same name as the input source file. Specified extensions are included, but will always have .o/.bin appended.")
+			.hasArg().argName("destination")
 			.build();
 		
 		options.addOptionGroup(mode);
@@ -101,13 +102,16 @@ public class Main {
 			CommandLineParser parser = new DefaultParser();
 			CommandLine cmdline = parser.parse(options, args);
 			
-			if(cmdline.hasOption("a") || cmdline.hasOption("l")) {
+			if(cmdline.hasOption("a") || cmdline.hasOption("l") || cmdline.hasOption("c")) {
 				if(cmdline.hasOption("a")) {
 					mode = ASSEMBLE;
 					inputPath = cmdline.getOptionValue("a");
 				} else if(cmdline.hasOption("l")) {
 					mode = LINK;
 					inputPath = cmdline.getOptionValue("l");
+				} else {
+					mode = ASSEMBLE_AND_LINK;
+					inputPath = cmdline.getOptionValue("c");
 				}
 				
 				if(cmdline.hasOption("o"))
@@ -124,7 +128,7 @@ public class Main {
 			HelpFormatter help = new HelpFormatter();
 			
 			System.err.println(e.getMessage());
-			help.printHelp("TRC3emu.jar -<a|e> <file> [-v]", options);
+			help.printHelp("TRC3emu.jar <-a | -l | -c | -e <file>> [-v] [-o <output>]", options);
 			
 			System.exit(1);
 		}
@@ -190,6 +194,11 @@ public class Main {
 			System.exit(1);
 		} else if(length > 2048)
 			System.err.println("This binary exceeds the maximum space available in TRC3's RAM! You will not be able to run this in Minecraft.");*/
+
+		if(binary.size() == 0) {
+			System.err.println("Output binary is empty!");
+			System.exit(1);
+		}		
 		
 		// Write to output file:
 		System.out.print("Writing...");

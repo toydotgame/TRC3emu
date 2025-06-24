@@ -14,8 +14,15 @@ public class Linker {
 	 * held.
 	 * Later, the memory allocator will place these bytes at the address where
 	 * the end of instructions are, + the data space offset address.
+	 * 
+	 * We do a similar thing for subroutines:
+	 * 1. Parse the instruction listing, counting instruction line numbers
+	 * 2. When a subroutine label is hit, define that subroutine as a String label
+	 *    and the instruction line number corresponding to it
+	 * 3. Substitute all these subroutine labels in to commands
 	 */
 	private static Map<String, Integer> definitions = new HashMap<String, Integer>();
+	private static Map<String, Integer> subroutines = new HashMap<String, Integer>();
 	public static int syntaxErrors = 0;
 	
 	public static List<String> main(List<String> input) {
@@ -61,20 +68,13 @@ public class Linker {
 	
 	private static void parseConstants() {
 		int constantCount = 0; // Count the number of constants we define
-		List<Integer> linesToRemove = new ArrayList<Integer>();
 		
 		for(int i = 0; i < input.size(); i++) {
 			String line = input.get(i);
 			if(!line.startsWith(".")) continue;
 			
-			String[] lineArr = line.split(" ");
-			if(lineArr.length != 2) {
-				Utils.printLinkerSyntaxErr(line, "Too many args for constant definition!");
-				continue;
-			}
-			
-			String constantName = lineArr[0].substring(1);			
-			if(definitions.get(constantName) != null) {
+			String constantName = line.split(" ")[0].substring(1);			
+			if(definitions.containsKey(constantName)) {
 				Utils.printLinkerSyntaxErr(line, "Constant \"" + constantName + "\" already defined!");
 				continue;
 			}

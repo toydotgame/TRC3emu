@@ -42,24 +42,18 @@ public class Assembler {
 			lineIndex++;
 			
 			// 1. Remove comments and empty lines
+			// TODO: Make line global because ts sucks
 			line = removeComments(line);
-			line = line.trim(); // Remove trailing whitespace for line-end comments
 			if(line.length() == 0) continue; // Remaining line is just whitespace, so don't add it to output
-			// 2. Pass through linker constant defs
-			if(line.startsWith(".") || (line.endsWith(":"))) { // Parsed in Linker
-				output.add(line);
-				continue;
-			}			
-			// 3. Convert opcode mnemonics to decimal opcode
+			// 2. Convert opcode mnemonics to decimal opcode
 			line = parseOpcode(line);
 			if(line == null) continue; // Don't bother to continue parsing a line we know is invalid
-			// 4. Look for aliases, define them accordingly, and substitute them in
-			// TODO: Subroutine aliases (0 args)
+			// 3. Look for aliases, define them accordingly, and substitute them in
 			line = parseAliases(line);
 			if(line == null) continue;
-			// 5. Validate instructions and remove invalid ones
-			line = validateInstruction(line);
-			if(line == null) continue;
+			// 4. Validate instructions and remove invalid ones
+			//line = validateInstruction(line);
+			//if(line == null) continue;
 			
 			// Finally, line is not null. Add the assembled instruction to our output
 			output.add(line);
@@ -73,16 +67,16 @@ public class Assembler {
 		int commentIndex = line.indexOf(";");
 		
 		if(commentIndex == -1) return line; // No comment found
-		return line.substring(0, commentIndex);
+		return line.substring(0, commentIndex).trim();
 	}
 	
 	private static String parseOpcode(String line) {
-		if(line.startsWith("#")) return line; // Assembler alias definition, parse this later in parseAliases()
+		if(isAlias(line)) return line; // Assembler alias definition, parse this later in parseAliases()
 		
 		String[] lineArr = line.split(" ");
 		Integer opcode = instructions.get(lineArr[0].toUpperCase()); // Allow null values
 		if(opcode == null) {
-			Utils.printAssemberSyntaxErr(line, "Unknown mnemonic \"" + lineArr[0] + "\"!");
+			Utils.printAssemblerSyntaxErr(line, "Unknown mnemonic \"" + lineArr[0] + "\"!");
 			return null;
 		}
 		
@@ -96,44 +90,70 @@ public class Assembler {
 		// Get args of instructions, excluding opcode
 		String[] lineArr = line.split(" ");
 		
-		if(line.startsWith("#")) { // Define new alias
-			// Error state: wrong # of args
-			if(lineArr.length != 2) {
-				Utils.printAssemberSyntaxErr(line, "Wrong number of arguments for alias definition! Should be 1, found " + String.valueOf(lineArr.length-1) + ".");
+		if(isAlias(line)) {
+			// Error: wrong # of args
+			if(!line.endsWith(":") && lineArr.length != 2) {
+				Utils.printAssemblerSyntaxErr(line, "Wrong number of arguments for alias definition! Should be 1, found " + String.valueOf(lineArr.length-1) + ".");
+				return null;
+			} else if(line.endsWith(":") && lineArr.length > 1) {
+				Utils.printAssemblerSyntaxErr(line, "Too many arguments for subroutine label! Should be 0, found " + String.valueOf(lineArr.length-1) + ".");
 				return null;
 			}
 			
-			// Error state: const already defined
-			String alias = lineArr[0].substring(1).toLowerCase(); // Remove '#'
+			// Error: digit-only alias name
+			String alias;
+			if(line.endsWith(":")) alias = line.substring(0, line.length()-1).toLowerCase();
+			else alias = lineArr[0].substring(1).toLowerCase(); // Remove '#'/'.'
 			if(alias.matches("[0-9]+")) {
-				Utils.printAssemberSyntaxErr(line, "Alias name cannot consist of only digits!");
+				Utils.printAssemblerSyntaxErr(line, "Alias name cannot consist of only digits!");
 				return null;
 			}
-			Integer fetchedAlias = aliases.get(alias); // Allow null
-			if(fetchedAlias != null) {
-				Utils.printAssemberSyntaxErr(line, "Alias \"" + alias + "\" already defined!");
+			
+			// Error: already defined
+			if(aliases.containsKey(alias)) {
+				Utils.printAssemblerSyntaxErr(line, "Alias \"" + alias + "\" already defined!");
 				return null;
 			}
 			
 			// Success: define new const, fail if not a number
 			try {
-				aliases.put(alias, Integer.valueOf(lineArr[1]));
-				return null; // Not a syntax error, but we don't want this line in the assembled output
+				/*
+				 * Hacky slop:
+				 * 1. Define null Integer `value`
+				 * 2. If subroutine label, value = -2
+				 *    Otherwise, value = args[0] of alias definition
+				 *     2a. If alias definition and args[0] supplied is negative,
+				 *         throw invalid literal error
+				 * 3. If linker constant, value = -1
+				 * 4. Store alias name and type (-2=subroutine, -1=linker const,
+				 *    otherwise=assembler def) in `aliases`
+				 *     4a. If assembler def, remove the line. Otherwise, keep it
+				 */
+				Integer value;
+				if(line.endsWith(":")) value = -2; // -2 denotes subroutine
+				else value = Integer.valueOf(lineArr[1]);
+				if(value < 0 && lineArr.length == 2) throw new NumberFormatException();
+				if(line.startsWith(".")) value = -1; // Use -1 as a value to denote alias is a linker definition, not an assembler constant
+				
+				aliases.put(alias, value);
+				if(line.startsWith("#")) return null; // Not a syntax error, but we don't want this line in the assembled output
+				else return line;
 			} catch(NumberFormatException e) {
-				Utils.printAssemberSyntaxErr(line, "Failed defining constant! Invalid literal \"" + lineArr[1] + "\".");
+				Utils.printAssemblerSyntaxErr(line, "Failed defining constant! Invalid literal \"" + lineArr[1] + "\".");
 				return null;
 			}
 		} // Else, check for aliases within instructions
 		
-		// TODO: Remove this syntax checking and make InstructionValidator a Linker thing
 		for(int i = 1; i < lineArr.length; i++) {
 			String token = lineArr[i];
 			if(Utils.isNumeric(token)) continue;
 			
 			Integer fetchedAlias = aliases.get(token);
 			if(fetchedAlias == null) {
-				Utils.printAssemberSyntaxErr(line, "Unknown alias \"" + token + "\"!");
+				Utils.printAssemblerSyntaxErr(line, "Unknown alias \"" + token + "\"!");
 				return null;
+			} else if(fetchedAlias == -1) {
+				continue; // Don't substitute if it's a linker def
 			}
 			
 			lineArr[i] = String.valueOf(fetchedAlias);
@@ -145,5 +165,13 @@ public class Assembler {
 	
 	private static String validateInstruction(String line) {
 		return InstructionValidator.main(line);
+	}
+	
+	private static boolean isAlias(String line) {
+		if(line.startsWith("#")) return true;
+		if(line.startsWith(".")) return true;
+		if(line.endsWith(":")) return true;
+		
+		return false;
 	}
 }

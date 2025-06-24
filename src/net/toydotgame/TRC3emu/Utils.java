@@ -53,7 +53,7 @@ public class Utils {
 	}
 	
 	// Pass null or empty string for line and just get the message without pretty stuff
-	public static void printAssemberSyntaxErr(String line, String message) {
+	public static void printAssemblerSyntaxErr(String line, String message) {
 		if(line != null && line.length() > 0) {
 			System.err.println(line);
 			System.err.println(nChars(line.length(), '^') + "\n\t" + Assembler.lineIndex  + ": " + message);
@@ -61,7 +61,7 @@ public class Utils {
 		Assembler.syntaxErrors++;
 	}
 	public static void printAssemberSyntaxErr(String message) {
-		printAssemberSyntaxErr(null, message);
+		printAssemblerSyntaxErr(null, message);
 	}
 	
 	public static void printLinkerSyntaxErr(String line, String message) {
