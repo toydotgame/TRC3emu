@@ -56,9 +56,9 @@ public class Utils {
 	public static void printAssemblerSyntaxErr(String line, String message) {
 		if(line != null && line.length() > 0) {
 			System.err.println(line);
-			System.err.println(nChars(line.length(), '^') + "\n\t" + Assembler.lineIndex  + ": " + message);
-		} else System.err.println(Assembler.lineIndex  + ": " + message);
-		Assembler.syntaxErrors++;
+			System.err.println(nChars(line.length(), '^') + "\n\t" + OldAssembler.lineIndex  + ": " + message);
+		} else System.err.println(OldAssembler.lineIndex  + ": " + message);
+		OldAssembler.syntaxErrors++;
 	}
 	public static void printAssemberSyntaxErr(String message) {
 		printAssemblerSyntaxErr(null, message);
@@ -148,7 +148,7 @@ public class Utils {
 	public static void printAssembly(List<String> source, List<String> binary) {
 		if(!Main.verbose) return; // Save from further processing
 		
-		Map<Integer, Integer> map = Assembler.instructionMappings;
+		Map<Integer, Integer> map = OldAssembler.instructionMappings;
 		
 		for(int i = 0; i < source.size(); i++) {
 			String srcLine = source.get(i);

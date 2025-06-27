@@ -8,80 +8,111 @@ import java.util.List;
 import java.util.Scanner;
 import net.toydotgame.TRC3emu.Utils;
 
+/**
+ * Wrapper for the {@link java.util.Scanner} and {@link FlushedFileWriter} classes
+ * to provide methods to read into {@code List}s and write {@code List}s to files
+ * @see #FileHandler(String, int)
+ */
 public class FileHandler extends Utils {
+	// Instance fields:
 	private File file;
+	/**
+	 * String {@link java.io.File#getName()} for this {@link FileHandler} instance
+	 */
+	public String name;
 	private Scanner scanner = null;
 	private FlushedFileWriter fileWriter;
-	private int mode = -1;
+	/**
+	 * The mode of this {@link FileHandler} instance. Either {@link #READ} or
+	 * {@link #WRITE}
+	 */
+	public int mode = -1;
+	
+	/**
+	 * Constant to denote read-only {@link FileHandler} objects
+	 */
 	public static final int READ = 0;
+	/**
+	 * Constant to denote write-only {@link FileHanlder} objects
+	 */
 	public static final int WRITE = 1;
 
+	/**
+	 * Creates a new {@link FileHandler} instance
+	 * @param path Relative path of file
+	 * @param mode Either {@link #READ} or {@link #WRITE}
+	 * @return FileHandler for given path
+	 * @see FileHandler
+	 * @see FileHandler#name
+	 * @see FileHandler#mode
+	 */
 	public FileHandler(String path, int mode) {
 		this.file = new File(path);
-		
+		this.name = this.file.getName();
 		this.mode = mode;
+		
 		switch(this.mode) {
 			case READ:
-				// Init to null to make compiler happy. If it's ever null, Scanner() has
-				// failed so we catch that error and exit 1 anyway:
+				// Init this.scanner to null to make compiler happy. If it's ever
+				// null, Scanner() has failed so we catch that error and exit 1
+				// anyway:
 				try {
 					this.scanner = new Scanner(this.file);
 				} catch(FileNotFoundException e) {
-					System.err.println("\nCouldn't find file \"" + this.name() + "\"!");
-					System.exit(1);
+					exit("Couldn't find file \"" + this.name + "\"!", 1);
 				}
 				break;
 			case WRITE:
 				try {
 					this.fileWriter = setupWriter(path);
 				} catch (IOException e) {
-					System.err.println("\nError opening \"" + this.name() + "\" for writing!");
-					System.exit(2);
+					exit("Error opening \"" + this.name + "\" for writing!");
 				}
 				break;
 			default:
-				// Create new exception but don't throw it:
-				Exception e = new Exception("\nInvalid mode \"" + this.mode + "\" for new FileHandler()!");
-				e.printStackTrace();
-				System.exit(2);
+				exit("Invalid mode \"" + this.mode + "\" for new FileHandler!");
 		}
 	}
 	
 	private FlushedFileWriter setupWriter(String path) throws IOException {
-		/*if(this.file.createNewFile())
-			Utils.verboseLog("\nWriting to " + this.name() + ".");
-		else
-			System.err.println("\n" + this.name() + " already exists! It will be overwritten.");*/
-		
+		// This returns true/false if the file doesn't/does exist respectively:
 		this.file.createNewFile();
 
 		return new FlushedFileWriter(this.file);
 	}
 	
+	/**
+	 * Write {@code list} as {@code \n}-delimited lines to the file in this
+	 * {@link FileHandler} instance. Will fatally exit if {@link FileHandler#mode}
+	 * is not {@link #WRITE}
+	 * @param list Lines to write
+	 * @see FileHandler#mode
+	 * @see FlushedFileWriter#writeln(String)
+	 * @see FileHandler#readIntoList()
+	 */
 	public void writeList(List<String> list) {
-		if(this.mode != WRITE) {
-			System.err.println("\nTried to write to a non-writable FileHandler! (File \"" + this.name() + "\")");
-			System.exit(2);
-		}
+		if(this.mode != WRITE)
+			exit("Tried to write to a non-writable FileHandler! (File \"" + this.name + "\")");
 		
 		try {
 			for(String i : list)
 				this.fileWriter.writeln(i);
+			this.fileWriter.close();
 		} catch(IOException e) {
-			System.err.println("\nCouldn't write to " + this.name() + "!");
-			System.exit(2);
+			exit("Couldn't write to " + this.name + "!");
 		}
 	}
 	
-	public String name() {
-		return this.file.getName();
-	}
-	
+	/**
+	 * Reads the lines from the file in this {@link FileHandler} instance into a
+	 * {@code List}. Will fatally exit if {@link FileHandler#mode} is not
+	 * {@link FileHandler#READ}
+	 * @return List of lines as {@link java.lang.String} objects
+	 * @see FileHandler#writeList(List)
+	 */
 	public List<String> readIntoList() {
-		if(this.mode != READ) {
-			System.err.println("\nTried to read from a non-readable FileHandler! (File \"" + this.name() + "\")");
-			System.exit(2);
-		}
+		if(this.mode != READ)
+			exit("Tried to read from a non-readable FileHandler! (File \"" + this.name + "\")");
 		
 		List<String> list = new ArrayList<String>();
 		while(this.scanner.hasNextLine()) {
@@ -90,5 +121,23 @@ public class FileHandler extends Utils {
 		}
 		
 		return list;
+	}
+	
+	/**
+	 * Prints an exception message and stack trace without throwing an error
+	 * @param message Exception message
+	 * @param exitCode Exit code to quit with
+	 */
+	private void exit(String message, int exitCode) {
+		Exception e = new Exception(message);
+		e.printStackTrace();
+		System.exit(2);
+	}
+	/**
+	 * Calls {@code exit(message, 2)}
+	 * @see FileHandler#exit(String, int)
+	 */
+	private void exit(String message) {
+		exit(message, 2);
 	}
 }

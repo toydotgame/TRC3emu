@@ -37,7 +37,7 @@ public class Linker {
 		// contain syntax error logic in Main#link(). The only rudimentary
 		// handling is the below. Everything else is a fatal error because we
 		// assume object files aren't human-written
-		if(Assembler.syntaxErrors > 0) {
+		if(OldAssembler.syntaxErrors > 0) {
 			System.err.println(syntaxErrors + " errors present. Output will not be written.");
 			System.exit(1);
 		}

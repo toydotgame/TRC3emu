@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Assembler {
+public class OldAssembler {
 	public static int lineIndex = 0; // Count the line in the source file we are working on (for logging)
 	public static int syntaxErrors = 0; // If this value is incremented, then we won't save the compiled output
 	private static Map<String, Integer> instructions = loadInstructions(); // Key: mnemonic string, value: opcode integer

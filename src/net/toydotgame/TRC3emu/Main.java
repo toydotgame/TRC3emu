@@ -9,6 +9,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import net.toydotgame.TRC3emu.assembler.Assembler;
 import net.toydotgame.io.FileHandler;
 
 public class Main {
@@ -17,6 +18,7 @@ public class Main {
 	private static final int EMULATE = 1;
 	private static final int LINK = 2;
 	private static final int ASSEMBLE_AND_LINK = 3;
+	private static final int EXPERIMENTAL_ASSEMBLE = 4;
 	public static int mode = -1;
 	public static boolean verbose = false;
 	private static String inputPath;
@@ -27,6 +29,9 @@ public class Main {
 		Options options = setupOptions();
 		checkOptions(options, args); // Exits with return code 1 if flags are invalid
 		// TODO: Nicer logging implementation for this damn thing
+		
+		FileHandler input = new FileHandler(inputPath, FileHandler.READ);
+		
 		
 		switch(mode) {
 			case ASSEMBLE_AND_LINK:
@@ -40,6 +45,9 @@ public class Main {
 				break;
 			case EMULATE:
 				emulate();
+				break;
+			case EXPERIMENTAL_ASSEMBLE:
+				Assembler.main(null);
 				break;
 			default:
 				System.err.println("Unknown mode " + mode + "! Exiting...");
@@ -142,13 +150,13 @@ public class Main {
 		System.out.println(" Done!");
 		
 		// Assemble:
-		List<String> instructionList = Assembler.main(lines);
+		List<String> instructionList = OldAssembler.main(lines);
 		Utils.verboseLog(lines.size() + " lines read => " + instructionList.size() + " instructions");
-		Utils.verboseLog(Assembler.aliases.size()-8 + " aliases defined.");
+		Utils.verboseLog(OldAssembler.aliases.size()-8 + " aliases defined.");
 		Utils.printAssembly(lines, instructionList); // Won't print without -v
 		
-		if(Assembler.syntaxErrors > 0) {
-			System.err.println(Assembler.syntaxErrors + " errors present. Output will not be written.");
+		if(OldAssembler.syntaxErrors > 0) {
+			System.err.println(OldAssembler.syntaxErrors + " errors present. Output will not be written.");
 			System.exit(1);
 		}
 		if(instructionList.size() == 0) {
