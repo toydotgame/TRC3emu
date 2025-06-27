@@ -22,16 +22,13 @@ public class Main {
 	public static int mode = -1;
 	public static boolean verbose = false;
 	private static String inputPath;
-	private static String outputPath;
+	private static String outputPath; // TODO: Remove
 	
 	public static void main(String[] args) {
 		// Setup options and check them immediately, storing values into variables:
 		Options options = setupOptions();
 		checkOptions(options, args); // Exits with return code 1 if flags are invalid
 		// TODO: Nicer logging implementation for this damn thing
-		
-		FileHandler input = new FileHandler(inputPath, FileHandler.READ);
-		
 		
 		switch(mode) {
 			case ASSEMBLE_AND_LINK:
@@ -47,11 +44,10 @@ public class Main {
 				emulate();
 				break;
 			case EXPERIMENTAL_ASSEMBLE:
-				Assembler.main(null);
+				experimentalAssemble();
 				break;
 			default:
-				System.err.println("Unknown mode " + mode + "! Exiting...");
-				System.exit(2);
+				Log.exit("Unknown mode \""+mode+"\"!");
 		}
 	}
 	
@@ -59,7 +55,6 @@ public class Main {
 		Options options = new Options();
 		
 		OptionGroup mode = new OptionGroup();
-		//Option verbose = new Option("a", "assemble", false, "Assemble a TRC3 assembly source file.");
 		Option assemble = Option.builder("a")
 			.longOpt("assemble")
 			.desc("Assemble a TRC3 assembly source file.")
@@ -112,7 +107,7 @@ public class Main {
 			
 			if(cmdline.hasOption("a") || cmdline.hasOption("l") || cmdline.hasOption("c")) {
 				if(cmdline.hasOption("a")) {
-					mode = ASSEMBLE;
+					mode = EXPERIMENTAL_ASSEMBLE;
 					inputPath = cmdline.getOptionValue("a");
 				} else if(cmdline.hasOption("l")) {
 					mode = LINK;
@@ -131,7 +126,7 @@ public class Main {
 				inputPath = cmdline.getOptionValue("e");
 			}
 			
-			if(cmdline.hasOption("v")) verbose = true;
+			if(cmdline.hasOption("v")) Log.setLogLevel(Log.VERBOSE);
 		} catch(ParseException e) {
 			HelpFormatter help = new HelpFormatter();
 			
@@ -169,6 +164,27 @@ public class Main {
 		FileHandler output = new FileHandler(outputPath + ".o", FileHandler.WRITE);
 		output.writeList(instructionList);
 		System.out.println(" Done!");
+	}
+	
+	private static void experimentalAssemble() {
+		Log.log("Assembling...");
+		
+		// Read file into list:
+		FileHandler input = new FileHandler(inputPath);
+		List<String> source = input.readIntoList();
+		
+		// Assemble:
+		List<String> binary = Assembler.main(source);
+		
+		// Quit if the assembler gave us no data:
+		if(binary.size() == 0) Log.exit("Output binary is 0 bytes!");
+		
+		// If there _is_ data, write out:
+		String outputPath = inputPath.split("\\.", 2)[0]+".bin";
+		FileHandler output = new FileHandler(outputPath, FileHandler.WRITE);
+		output.writeList(binary);
+		
+		Log.log("Done!");
 	}
 	
 	private static void link() {

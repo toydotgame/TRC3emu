@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import net.toydotgame.TRC3emu.Utils;
+import net.toydotgame.TRC3emu.Log;
 
 /**
  * Wrapper for the {@link java.util.Scanner} and {@link FlushedFileWriter} classes
@@ -59,24 +60,33 @@ public class FileHandler extends Utils {
 				try {
 					this.scanner = new Scanner(this.file);
 				} catch(FileNotFoundException e) {
-					exit("Couldn't find file \"" + this.name + "\"!", 1);
+					Log.fatalError("Couldn't find file \""+this.name+"\"!", 1);
 				}
 				break;
 			case WRITE:
 				try {
 					this.fileWriter = setupWriter(path);
 				} catch (IOException e) {
-					exit("Error opening \"" + this.name + "\" for writing!");
+					Log.exit("Error opening \""+this.name+"\" for writing!");
 				}
 				break;
 			default:
-				exit("Invalid mode \"" + this.mode + "\" for new FileHandler!");
+				Log.exit("Invalid mode \""+this.mode+"\" for new FileHandler!");
 		}
+		
+		Log.debug("Created new FileHandler for \""+this.name+"\" (mode="+this.mode+")");
+	}
+	/**
+	 * Creates a read-only {@link FileHandler} instance
+	 * @see FileHandler#FileHandler(String, int)
+	 */
+	public FileHandler(String path) {
+		this(path, READ);
 	}
 	
 	private FlushedFileWriter setupWriter(String path) throws IOException {
-		// This returns true/false if the file doesn't/does exist respectively:
-		this.file.createNewFile();
+		if(!this.file.createNewFile())
+			Log.debug(this.name+" already exists! Overwriting it anyway");
 
 		return new FlushedFileWriter(this.file);
 	}
@@ -92,14 +102,14 @@ public class FileHandler extends Utils {
 	 */
 	public void writeList(List<String> list) {
 		if(this.mode != WRITE)
-			exit("Tried to write to a non-writable FileHandler! (File \"" + this.name + "\")");
+			Log.exit("Tried to write to a non-writable FileHandler! (File \""+this.name+"\")");
 		
 		try {
 			for(String i : list)
 				this.fileWriter.writeln(i);
 			this.fileWriter.close();
 		} catch(IOException e) {
-			exit("Couldn't write to " + this.name + "!");
+			Log.exit("Couldn't write to "+this.name+"! This writer may possibly be closed");
 		}
 	}
 	
@@ -112,32 +122,15 @@ public class FileHandler extends Utils {
 	 */
 	public List<String> readIntoList() {
 		if(this.mode != READ)
-			exit("Tried to read from a non-readable FileHandler! (File \"" + this.name + "\")");
+			Log.exit("Tried to read from a non-readable FileHandler! (File \""+this.name+"\")");
 		
 		List<String> list = new ArrayList<String>();
 		while(this.scanner.hasNextLine()) {
-			String line = this.scanner.nextLine().replaceAll("\\s+", " ").trim(); // Lint lines to be kind
-			list.add(line); // Here, each `line` String is an instruction with its arguments separated by spaces
+			// Lint lines to be kind:
+			String line = this.scanner.nextLine().replaceAll("\\s+", " ").trim();
+			list.add(line);
 		}
 		
 		return list;
-	}
-	
-	/**
-	 * Prints an exception message and stack trace without throwing an error
-	 * @param message Exception message
-	 * @param exitCode Exit code to quit with
-	 */
-	private void exit(String message, int exitCode) {
-		Exception e = new Exception(message);
-		e.printStackTrace();
-		System.exit(2);
-	}
-	/**
-	 * Calls {@code exit(message, 2)}
-	 * @see FileHandler#exit(String, int)
-	 */
-	private void exit(String message) {
-		exit(message, 2);
 	}
 }
