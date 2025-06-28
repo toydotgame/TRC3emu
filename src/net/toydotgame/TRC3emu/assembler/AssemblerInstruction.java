@@ -9,6 +9,7 @@ import net.toydotgame.TRC3emu.Log;
 /**
  * Class to hold a single line of assembly source code and its methods to
  * operate on itself.
+ * @see #AssemblerInstruction(String, int)
  */
 public class AssemblerInstruction {
 	// Instance fields:
@@ -48,6 +49,10 @@ public class AssemblerInstruction {
 	 * this value will be populated with its name.
 	 */
 	public String alias;
+	/**
+	 * A copy of the original text (for syntax error pretty-printing).
+	 */
+	public final String originalText;
 	
 	// Assembly source types:
 	/**
@@ -135,19 +140,11 @@ public class AssemblerInstruction {
 	 */
 	public AssemblerInstruction(String line, int index) {
 		this.tokens = tokenize(removeComments(line));
-		this.lineIndex = index+1;
+		this.lineIndex = index;
+		this.originalText = line;
 		
 		// Define source line type or raise syntax error:
 		this.type = Validator.main(this);
-		
-		// TODO: Remove when no longer needed
-		Log.debug("New instruction created: \""+this.getText()+"\"");
-		Log.debug("\tType: "+this.type);
-		if(this.type != INSTRUCTION) return;
-		// These will be null if not INSTRUCTION:
-		Log.debug("\tInstruction type: "+this.instructionType);
-		Log.debug("\tOpcode: "+this.opcode);
-		Log.debug("\tIndex: "+this.memoryIndex);
 	}
 	
 	/**
@@ -184,7 +181,7 @@ public class AssemblerInstruction {
 	 * line. (String getter for {@link AssemblerInstruction#tokens} kinda)
 	 * @return The instruction line
 	 */
-	public String getText() {
+	public String text() {
 		return String.join(" ", this.tokens);
 	}
 
@@ -204,27 +201,5 @@ public class AssemblerInstruction {
 			Assembler.syntaxError("No opcode found for this instruction!", this);
 		}
 		this.tokens.set(0, String.valueOf(opcode));
-	}
-	
-	/**
-	 * Hands off to {@link Validator#validateOverflows(AssemblerInstruction)}.
-	 * The return value of that, if {@code false}, is used to set the {@link
-	 * #type} of this instance to {@link #INVALID}. Otherwise, nothing is done.
-	 * <br><br>
-	 * An instruction's validity is determined by two things:
-	 * <ol>
-	 * 	<li>There are the correct number of arguments for this instruction. This
-	 * is handled by {@link Validator#validateInstruction(AssemblerInstruction)}
-	 * and {@link Validator#validateAlias(AssemblerInstruction)}</li>
-	 * 	<li>Each argument (operand) fits within the number of bits allocated in
-	 * the instruction word format. This is handled here</li>
-	 * </ol>
-	 * @see Validator#validateOverflows(AssemblerInstruction)
-	 * @see Validator#validateAlias(AssemblerInstruction)
-	 * @see Validator#validateInstruction(AssemblerInstruction)
-	 */
-	public void validate() {
-		boolean isValid = Validator.validateOverflows(this);
-		if(!isValid) this.type = INVALID;
 	}
 }

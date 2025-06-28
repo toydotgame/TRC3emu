@@ -14,7 +14,9 @@ import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.REG_TO_IMM3;
 import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.SUBROUTINE;
 import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.VARIABLE;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import net.toydotgame.TRC3emu.Utils;
 
 /**
  * Class to handle validating new instructions' token lengths, syntax for
@@ -51,7 +53,7 @@ public class Validator {
 	 */
 	public static int main(AssemblerInstruction instruction) {
 		// I know this is ugly
-		if(instruction.getText().endsWith(":")) { // Subroutine
+		if(instruction.text().endsWith(":")) { // Subroutine
 			if(validateAlias(instruction, true)) {
 				// instructionCounter holds the index of the next instruction, so
 				// don't modify it, but do set the index of the subroutine to it:
@@ -59,10 +61,10 @@ public class Validator {
 				return SUBROUTINE;
 			}
 			else return INVALID;
-		} else if(instruction.getText().startsWith(".")) { // Variable
+		} else if(instruction.text().startsWith(".")) { // Variable
 			if(validateAlias(instruction, false)) return VARIABLE;
 			else return INVALID;
-		} else if(instruction.getText().startsWith("#")) { // Definition
+		} else if(instruction.text().startsWith("#")) { // Definition
 			if(validateAlias(instruction, false)) return DEFINITION;
 			else return INVALID;
 		} else { // Instruction or otherwise
@@ -93,11 +95,11 @@ public class Validator {
 		}
 		
 		// Check if the name of the instruction is valid (non-digital):
-		String alias = instruction.getText();
+		String alias = instruction.text().toLowerCase();
 		if(subroutine) instruction.alias = alias.substring(0, alias.length()-1);
 		else instruction.alias = alias.split(" ", 2)[0].substring(1);
 		
-		if(instruction.alias.matches("[0-9]+")) {
+		if(Utils.isDigital(instruction.alias)) {
 			Assembler.syntaxError("Alias name shouldn't be digits-only!", instruction);
 			return false;
 		}
@@ -129,7 +131,7 @@ public class Validator {
 	 */
 	private static boolean validateInstruction(AssemblerInstruction instruction) {
 		// Mnemonics alone are at least 3 chars long, so anything less fails
-		int length = instruction.getText().length();
+		int length = instruction.text().length();
 		if(length < 3) {
 			// Don't raise a syntax error for comment lines:
 			if(length != 0) Assembler.syntaxError("Invalid instruction!", instruction);
@@ -157,7 +159,7 @@ public class Validator {
 		int desiredSize = desiredTokenCounts.get(instruction.instructionType);
 		boolean isValid = false;		
 		
-		// Case-by-case validity checking:
+		// Case-by-case validity checking: Also see Assembler#validateOperands()
 		switch(instruction.opcode) {
 			case 11: // RSH
 				if(actualSize == 3 || actualSize == 4) isValid = true;
@@ -190,7 +192,10 @@ public class Validator {
 		return AssemblerInstruction.opcodes.get(instruction.tokens.get(0).toUpperCase());
 	}
 	
-	public static boolean validateOverflows(AssemblerInstruction instruction) {
+	public static boolean validateOverflows(Integer opcode, List<Integer> operands) {
+		// TODO: Implement. We know now the provided instruction always has a
+		// fixed operand list size, and that all aliases handled. This function
+		// requires very little error handling regarding those cases as such
 		return true;
 	}
 }
