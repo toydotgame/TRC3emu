@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import net.toydotgame.TRC3emu.Utils;
+import net.toydotgame.TRC3emu.OldUtils;
 import net.toydotgame.TRC3emu.Log;
 
 /**
@@ -14,7 +14,7 @@ import net.toydotgame.TRC3emu.Log;
  * to provide methods to read into {@code List}s and write {@code List}s to files
  * @see #FileHandler(String, int)
  */
-public class FileHandler extends Utils {
+public class FileHandler extends OldUtils {
 	// Instance fields:
 	private File file;
 	/**
@@ -86,7 +86,7 @@ public class FileHandler extends Utils {
 	
 	private FlushedFileWriter setupWriter(String path) throws IOException {
 		if(!this.file.createNewFile())
-			Log.debug(this.name+" already exists! Overwriting it anyway");
+			Log.log(this.name+" already exists! Overwriting it anyway");
 
 		return new FlushedFileWriter(this.file);
 	}

@@ -146,9 +146,9 @@ public class Main {
 		
 		// Assemble:
 		List<String> instructionList = OldAssembler.main(lines);
-		Utils.verboseLog(lines.size() + " lines read => " + instructionList.size() + " instructions");
-		Utils.verboseLog(OldAssembler.aliases.size()-8 + " aliases defined.");
-		Utils.printAssembly(lines, instructionList); // Won't print without -v
+		OldUtils.verboseLog(lines.size() + " lines read => " + instructionList.size() + " instructions");
+		OldUtils.verboseLog(OldAssembler.aliases.size()-8 + " aliases defined.");
+		OldUtils.printAssembly(lines, instructionList); // Won't print without -v
 		
 		if(OldAssembler.syntaxErrors > 0) {
 			System.err.println(OldAssembler.syntaxErrors + " errors present. Output will not be written.");

@@ -88,7 +88,7 @@ public class Linker {
 			
 			String constantName = lineArr[0].substring(1);			
 			if(definitions.containsKey(constantName)) {
-				Utils.printLinkerSyntaxErr(line, "Constant \"" + constantName + "\" already defined!");
+				OldUtils.printLinkerSyntaxErr(line, "Constant \"" + constantName + "\" already defined!");
 				continue;
 			}
 			
@@ -97,7 +97,7 @@ public class Linker {
 				value = Integer.valueOf(lineArr[1]);
 				if(value < 0 || value > 255) throw new NumberFormatException();
 			} catch(NumberFormatException e) {
-				Utils.printLinkerSyntaxErr(line, "Invalid literal for constant \"" + constantName + "\"! Should be 0-255.");
+				OldUtils.printLinkerSyntaxErr(line, "Invalid literal for constant \"" + constantName + "\"! Should be 0-255.");
 				continue;
 			}
 			
@@ -146,7 +146,7 @@ public class Linker {
 					break;
 				case 2:
 					if(memory.size()%2 != 0) // Push an empty byte to align
-						memory.add(Utils.paddedBinary(0, 8));
+						memory.add(OldUtils.paddedBinary(0, 8));
 					// Push lo byte, then hi byte
 					memory.add(word.substring(8));
 					memory.add(word.substring(0, 8));

@@ -76,7 +76,7 @@ public class OldAssembler {
 		String[] lineArr = line.split(" ");
 		Integer opcode = instructions.get(lineArr[0].toUpperCase()); // Allow null values
 		if(opcode == null) {
-			Utils.printAssemblerSyntaxErr(line, "Unknown mnemonic \"" + lineArr[0] + "\"!");
+			OldUtils.printAssemblerSyntaxErr(line, "Unknown mnemonic \"" + lineArr[0] + "\"!");
 			return null;
 		}
 		
@@ -93,10 +93,10 @@ public class OldAssembler {
 		if(isAlias(line)) {
 			// Error: wrong # of args
 			if(!line.endsWith(":") && lineArr.length != 2) {
-				Utils.printAssemblerSyntaxErr(line, "Wrong number of arguments for alias definition! Should be 1, found " + String.valueOf(lineArr.length-1) + ".");
+				OldUtils.printAssemblerSyntaxErr(line, "Wrong number of arguments for alias definition! Should be 1, found " + String.valueOf(lineArr.length-1) + ".");
 				return null;
 			} else if(line.endsWith(":") && lineArr.length > 1) {
-				Utils.printAssemblerSyntaxErr(line, "Too many arguments for subroutine label! Should be 0, found " + String.valueOf(lineArr.length-1) + ".");
+				OldUtils.printAssemblerSyntaxErr(line, "Too many arguments for subroutine label! Should be 0, found " + String.valueOf(lineArr.length-1) + ".");
 				return null;
 			}
 			
@@ -105,13 +105,13 @@ public class OldAssembler {
 			if(line.endsWith(":")) alias = line.substring(0, line.length()-1).toLowerCase();
 			else alias = lineArr[0].substring(1).toLowerCase(); // Remove '#'/'.'
 			if(alias.matches("[0-9]+")) {
-				Utils.printAssemblerSyntaxErr(line, "Alias name cannot consist of only digits!");
+				OldUtils.printAssemblerSyntaxErr(line, "Alias name cannot consist of only digits!");
 				return null;
 			}
 			
 			// Error: already defined
 			if(aliases.containsKey(alias)) {
-				Utils.printAssemblerSyntaxErr(line, "Alias \"" + alias + "\" already defined!");
+				OldUtils.printAssemblerSyntaxErr(line, "Alias \"" + alias + "\" already defined!");
 				return null;
 			}
 			
@@ -139,18 +139,18 @@ public class OldAssembler {
 				if(line.startsWith("#")) return null; // Not a syntax error, but we don't want this line in the assembled output
 				else return line;
 			} catch(NumberFormatException e) {
-				Utils.printAssemblerSyntaxErr(line, "Failed defining constant! Invalid literal \"" + lineArr[1] + "\".");
+				OldUtils.printAssemblerSyntaxErr(line, "Failed defining constant! Invalid literal \"" + lineArr[1] + "\".");
 				return null;
 			}
 		} // Else, check for aliases within instructions
 		
 		for(int i = 1; i < lineArr.length; i++) {
 			String token = lineArr[i];
-			if(Utils.isNumeric(token)) continue;
+			if(OldUtils.isNumeric(token)) continue;
 			
 			Integer fetchedAlias = aliases.get(token);
 			if(fetchedAlias == null) {
-				Utils.printAssemblerSyntaxErr(line, "Unknown alias \"" + token + "\"!");
+				OldUtils.printAssemblerSyntaxErr(line, "Unknown alias \"" + token + "\"!");
 				return null;
 			} else if(fetchedAlias == -1) {
 				continue; // Don't substitute if it's a linker def

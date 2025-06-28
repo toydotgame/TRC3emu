@@ -2,7 +2,7 @@
 ; Comment 2
 .helloworld 255
 .label2 2
-#label3 1
+#label3 2
 NOP
 HLT
 ; Comment 3
@@ -24,7 +24,7 @@ RSH r1 r2    ; RSH technically an ADD, then shift
 RSH r1 r2 r3
 RSH r1 r2
 LDI 255 r1
-;JMP label3
+JMP label3
 BEQ 1023
 BNE 1023
 BGT 1023
