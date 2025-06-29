@@ -119,6 +119,14 @@ public class Validator {
 		// Type is obviously INSTRUCTION,
 		instruction.opcode = parseOpcode(instruction);
 		instruction.instructionType = Instruction.instructionTypes.get(instruction.opcode);
+		if(instruction.instructionType == null) {
+			/* In this case, we have a non-instruction, non-comment, and non-
+			 * alias input. It is very likely garbled data or not TRC3 assembly.
+			 * This is some kind of syntax error/unimplemented opcode
+			 */
+			Assembler.syntaxError("Invalid instruction!", instruction);
+			return false;
+		}
 		instruction.memoryIndex = Instruction.instructionCounter++<<1; // Set to counter<<1, then incr. counter
 		
 		// Count of desired tokens in instruction, including opcode:

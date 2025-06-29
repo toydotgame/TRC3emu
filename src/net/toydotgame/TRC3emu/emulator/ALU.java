@@ -20,6 +20,7 @@ public class ALU extends Emulator {
 		int a = regfile.read(operands[0]);
 		int b = regfile.read(operands[1]);
 		int c = operands[2];
+		Log.debug("a: "+a+", b: "+b+", c: "+c);
 		switch(operation) {
 			case ADD:
 				regfile.write(c, a+b);

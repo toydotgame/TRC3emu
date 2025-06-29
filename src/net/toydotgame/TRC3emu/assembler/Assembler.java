@@ -240,7 +240,12 @@ public class Assembler {
 				
 				break;
 			case Instruction.SUBROUTINE:
-				aliases.put(alias, instruction.memoryIndex);
+				/* Value of subroutine is a program counter value, i.e. 0–1023,
+				 * one per instruction. memoryIndex counts the byte location,
+				 * however (i.e. 0–2047, two per instruction), meaning we must
+				 * right shift it:
+				 */
+				aliases.put(alias, instruction.memoryIndex>>1);
 				
 				break;
 			case Instruction.DEFINITION:

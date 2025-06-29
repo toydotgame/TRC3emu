@@ -30,7 +30,23 @@ public class Emulator {
 	 * @see RegisterFile
 	 */
 	public static RegisterFile regfile = new RegisterFile();
+	/**
+	 * Approximate clock speed in Hz. This value is used for the additional
+	 * <i>delay</i> per instruction, because the processing time Java takes
+	 * per instruction is negligible.<br>
+	 * <br>
+	 * To match TRC3's processing speed, a value of approximately {@code 1d/12}
+	 * is needed.<br>
+	 * <br>
+	 * If entering a literal of the form {@code 1/x} Hz (to yield a speed of
+	 * {@code x} seconds per clock instead of {@code x} Hz/clocks per second),
+	 * <b>remember to type cast the constant {@code 1} to double with something
+	 * like {@code 1.0} or {@code 1d}, otherwise Java will concatenate the
+	 * result of the division to an {@code int}</b>!
+	 */
+	private static final double CLOCK_SPEED = 1000;
 	
+	@SuppressWarnings("unused") // Purely for the warning when CLOCK_SPEED is -1
 	public static void main(List<Integer> memory) {
 		// Load memory into class:
 		ram = memory;
@@ -64,38 +80,39 @@ public class Emulator {
 						regfile.read(c)+imm
 					);
 					break;
-				case 4:
+				case 4: // SUB
 					ALU.main(operands, ALU.SUB);
 					break;
-				case 5:
+				case 5: // XOR
 					ALU.main(operands, ALU.XOR);
 					break;
-				case 6:
+				case 6: // XNO
 					ALU.main(operands, ALU.XNO);
 					break;
-				case 7:
+				case 7: // IOR
 					ALU.main(operands, ALU.IOR);
 					break;
-				case 8:
+				case 8: // NOR
 					ALU.main(operands, ALU.NOR);
 					break;
-				case 9:
+				case 9: // AND
 					ALU.main(operands, ALU.AND);
 					break;
-				case 10:
+				case 10: // NAN
 					ALU.main(operands, ALU.NAN);
 					break;
-				case 11:
+				case 11: // RSH
 					ALU.main(operands, ALU.RSH);
 					break;
-				case 12:
+				case 12: // LDI
 					imm = operands>>3;
-					c = operands&0x3;
-					regfile.write(c,
-						regfile.read(c)+imm
-					);
+					c = operands&0x7;
+					regfile.write(c, imm);
 					break;
-				case 13:
+				case 13: // JMP
+					imm = operands>>1;
+					pc = imm-1; // Account for pc++ run each time. This does not mirror Minecraft
+					break;
 				case 14:
 				case 15:
 				case 16:
@@ -114,6 +131,17 @@ public class Emulator {
 			}
 			
 			Log.debug("EXECUTE DONE: "+regfile.enumerate());
+			
+			if(CLOCK_SPEED > 0) {
+				try {
+					Thread.sleep((long)(1000/CLOCK_SPEED));
+				} catch (InterruptedException e) {
+					Log.exit("User killed the emulator.", 0);
+				}
+			} else if(CLOCK_SPEED == 0) {
+				Log.log("Clock speed is set to 0. Effectively halted.");
+				break;
+			}
 			
 			pc++;
 		}
