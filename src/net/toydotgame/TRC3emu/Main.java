@@ -1,5 +1,7 @@
 package net.toydotgame.TRC3emu;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -10,6 +12,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import net.toydotgame.TRC3emu.assembler.Assembler;
+import net.toydotgame.TRC3emu.emulator.Emulator;
 import net.toydotgame.io.FileHandler;
 
 public class Main {
@@ -131,8 +134,34 @@ public class Main {
 	}
 	
 	private static void emulate() {
-		System.out.println("Emulator called.");
-		// TODO: Implement
+		Log.log("Running emulator...");
+		
+		// Read file and create rudimentary memory map:
+		List<String> binary = new FileHandler(inputPath).readIntoList();
+		if(binary.size() > 2048)
+			Log.exit("Input binary won't fit into memory!", 1);
+		// Initialise empty fixed-size memory map:
+		List<Integer> memory = Arrays.asList(new Integer[2048]);
+		Collections.fill(memory, 0);
+		// Read into memory:
+		int bytesRead = 0;
+		for(int i = 0; i < binary.size(); i++) {
+			String word = binary.get(i).split(" ", 3)[1];
+			try {
+				int value = Integer.parseInt(word, 2);
+				if(value < 0 || value > 255) throw new NumberFormatException();
+				memory.set(i, value);
+			} catch(NumberFormatException e) {
+				Log.exit("Mangled binary input!", 1);
+			}
+			bytesRead++;
+		}
+		Log.debug(bytesRead+" bytes read into memory.");
+		
+		// Pass memory map into emulator: This is the end of what we need to do
+		Emulator.main(memory);
+		
+		Log.log("Emulator halted!");
 	}
 
 	private static void help(Options options) {

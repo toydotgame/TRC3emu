@@ -218,7 +218,7 @@ public class Validator {
 			case IMM10:
 				return failUnderOverflow(args, 1023, instruction);
 			default:
-				Log.fatalError("(Validator) Instruction type for opcode `"+instruction.opcode+"` unimplemented!");
+				Log.fatalError("Instruction type for opcode `"+instruction.opcode+"` unimplemented!");
 		}
 		return true;
 	}

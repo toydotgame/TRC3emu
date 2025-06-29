@@ -122,7 +122,10 @@ public class Assembler {
 		);
 		
 		if(syntaxErrors > 0)
-			Log.exit(syntaxErrors+" errors occured. No output will be written");
+			Log.exit(
+				String.format("%,d", syntaxErrors)
+				+" errors occured. No output will be written"
+			);
 		
 		if(Log.logLevel < Log.VERBOSE) return binary;
 		
@@ -152,6 +155,12 @@ public class Assembler {
 			line = Utils.paddedHex(i, 4)+": "+line+srcLine; // 1 line in `binary` is 1 byte, so just use the index
 			binary.set(i, line);			
 		}
+		
+		if(binary.size() > 2048)
+			Log.exit(
+				"Final binary does not fit into memory! Should be ≤2,048 bytes, but got "
+				+String.format("%,d", binary.size())+" bytes."
+			);
 		
 		return binary;
 	}

@@ -130,6 +130,7 @@ public class FileHandler {
 			list.add(line);
 		}
 		
+		this.scanner.close();
 		return list;
 	}
 }

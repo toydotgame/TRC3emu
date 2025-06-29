@@ -113,7 +113,7 @@ public class Encoder {
 				
 				break;
 			default:
-				Log.fatalError("(Encoder) Instruction type for opcode `"+instruction.opcode+"` unimplemented!");
+				Log.fatalError("Instruction type for opcode `"+instruction.opcode+"` unimplemented!");
 		}
 		
 		if(instructionStr.length() != 16)
