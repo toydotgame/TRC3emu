@@ -61,10 +61,19 @@ public class Encoder {
 	private static String paddedBinary(int x, int len) {
 		if(len <= 0) len = 1; // String.format() requires a non-zero value
 		
-		return String.format("%"+len +"s", Integer.toBinaryString(x))
+		return String.format("%"+len+"s", Integer.toBinaryString(x))
 			.replace(" ", "0");
 	}
 
+	/**
+	 * Given a fully validated and prepared {@link Instruction} instance, this
+	 * method encodes that to a 16-bit instruction word, split into two
+	 * single-byte Strings in a {@code String[]}.
+	 * @param instruction {@link Instruction} instance, post-processing
+	 * @return {@code String[2]}, where index {@code 0} corresponds to the hi
+	 * byte/most significant 8 bits, and index {@code 1} corresponds to the lo
+	 * byte/least significant 8 bits in the instruction word
+	 */
 	private static String[] encodeInstruction(Instruction instruction) {
 		String instructionStr = "";
 		
@@ -124,10 +133,9 @@ public class Encoder {
 		if(instructionStr.length() != 16)
 			Log.exit("Resulting instruction word is not 2 bytes!: "+instructionStr);
 		
-		String[] instructionBytes = new String[2];
-		instructionBytes[0] = "Hi byte: "+instructionStr.substring(0, 8);
-		instructionBytes[1] = "Lo byte: "+instructionStr.substring(8);
-		instructionBytes[1] = "\n"+instruction.originalText+"\n"+instructionBytes[1];
+		String[] instructionBytes = new String[] {
+			instructionStr.substring(0, 8), instructionStr.substring(8)
+		};
 		
 		return instructionBytes;
 	}

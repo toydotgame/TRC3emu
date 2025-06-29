@@ -12,6 +12,7 @@ import net.toydotgame.TRC3emu.Utils;
  */
 public class Assembler {
 	private static int syntaxErrors = 0;
+	
 	/**
 	 * Denotes the list of alias names and their numeric values for later
 	 * substitution. Variables are also added to this list in order to reserve
@@ -37,6 +38,7 @@ public class Assembler {
 		for(int i = 0; i < 8; i++) map.put("r"+i, i); // Register aliases
 		return map;
 	}
+	
 	/**
 	 * This Map holds the value of a specific variable, with the key being the
 	 * alias name, and the value being the actual literal unsigned 8-bit byte
@@ -113,12 +115,6 @@ public class Assembler {
 			validateOverflows(instruction);
 			
 			if(instruction.type != Instruction.INSTRUCTION) program.remove(i);
-			
-			// TODO: Remove when no longer needed
-			Log.debug(instruction.originalText);
-			Log.debug("    Index: "+instruction.memoryIndex);
-			Log.debug("    Assembled: "+instruction.text());
-			Log.debug("        Valid: "+!(instruction.type == Instruction.INVALID));
 		}
 		
 		// Concatenate two data spaces into one stream:
@@ -126,11 +122,38 @@ public class Assembler {
 			program, new ArrayList<Integer>(variables.values())
 		);
 		
-		Log.debug("Aliases:\n"+aliases);
-		Log.debug("Variables:\n"+variables);
-		
 		if(syntaxErrors > 0)
 			Log.exit(syntaxErrors+" errors occured. No output will be written");
+		
+		if(Log.logLevel < Log.VERBOSE) return binary;
+		
+		// Verbose mode add details to compiled output
+		for(int i = 0; i < binary.size(); i++) {
+			String line = binary.get(i);
+			
+			String index = String.format("%04X", i); // 1 line in `binary` is 1 byte, so just use the index
+			String srcLine = "";
+			// i>>1 yields floor(i/2), which we can take as the instruction # in
+			// the binary
+			if(i>>1 < program.size()) { // Log program space
+				if(i%2==0) srcLine = "\t"+program.get(i>>1).originalText; // Only print on even lines
+			} else { // Else, log variable space
+				// Hack for lazy (i>>1)→varIndex conversion that remembers to
+				// remove program size beforehand:
+				int variableIndex = i>>1-program.size();
+				if(i%2 == 1) variableIndex++;
+				
+				// Enumerate list of variable keys, create a List<String> from
+				// that, then get the key at numerical index `variableIndex`: 
+				String variableKey = new ArrayList<String>(variables.keySet())
+					.get(variableIndex);
+				
+				srcLine = "\t."+variableKey+" "+String.valueOf(variables.get(variableKey));
+			}
+			
+			line = index+": "+line+srcLine;
+			binary.set(i, line);			
+		}
 		
 		return binary;
 	}

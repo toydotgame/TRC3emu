@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import net.toydotgame.TRC3emu.OldUtils;
 import net.toydotgame.TRC3emu.Log;
 
 /**
@@ -14,7 +13,7 @@ import net.toydotgame.TRC3emu.Log;
  * to provide methods to read into {@code List}s and write {@code List}s to files
  * @see #FileHandler(String, int)
  */
-public class FileHandler extends OldUtils {
+public class FileHandler {
 	// Instance fields:
 	private File file;
 	/**

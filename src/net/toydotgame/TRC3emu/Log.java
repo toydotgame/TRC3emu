@@ -25,8 +25,12 @@ public class Log {
 	 */
 	public static final int VERBOSE = 3;
 	
-	// Log level if #setLogLevel(int) isn't called
-	private static int logLevel = NORMAL;
+	/**
+	 * Log level if #setLogLevel(int) isn't called. Defaults to {@link #NORMAL}.
+	 * Used in {@link Assembler#main(List)} to also determine whether output
+	 * binaries should be verbose or not (hacky).
+	 */
+	public static int logLevel = NORMAL;
 	/**
 	 * Default exit code for fatal errors that don't specify otherwise
 	 */
