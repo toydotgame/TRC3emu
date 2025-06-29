@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.toydotgame.TRC3emu.Utils;
 
 /**
  * Class to hold a single line of assembly source code and its methods to
@@ -95,26 +96,6 @@ public class Instruction {
 	 * {@code #foo 42}
 	 */
 	public static final int DEFINITION = 3;
-	
-	// Opcodes:
-	public static Map<String, Integer> opcodes = loadOpcodes();
-	private static Map<String, Integer> loadOpcodes() {
-		// Convert String[] to a map of the value at String[i] to the index i:
-		Map<String, Integer> map = new HashMap<String, Integer>();
-		String[] mnemonics = {
-			"NOP", "HLT", "ADD", "ADI",
-			"SUB", "XOR", "XNO", "IOR",
-			"NOR", "AND", "NAN", "RSH",
-			"LDI", "JMP", "BEQ", "BNE",
-			"BGT", "BLT", "CAL", "RET",
-			"REA", "STO", "GPI", "GPO",
-			"BEL", "PAS", "PAG"
-		};
-		
-		for(int i = 0; i < mnemonics.length; i++) map.put(mnemonics[i], i);
-		
-		return map;
-	}
 	
 	// Instruction types:
 	public static final int NONE = 0;
@@ -227,7 +208,7 @@ public class Instruction {
 		if(this.type != INSTRUCTION) return;
 		
 		// Numeric opcode as String:
-		Integer opcode = opcodes.get(tokens.get(0).toUpperCase());
+		Integer opcode = Utils.opcodes.get(tokens.get(0).toUpperCase());
 		if(opcode == null) {
 			Assembler.syntaxError("No opcode found for this instruction!", this);
 		}

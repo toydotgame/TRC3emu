@@ -1,0 +1,4 @@
+LDI 42 r1
+LDI 1 r2
+ADD r1 r2 r3
+

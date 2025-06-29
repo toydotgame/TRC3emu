@@ -1,8 +1,32 @@
-package net.toydotgame.TRC3emu.assembler;
+package net.toydotgame.TRC3emu;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Utils {
+	/**
+	 * Map of opcode mnemonics to their numeric opcode.
+	 */
+	public static final Map<String, Integer> opcodes = loadOpcodes();
+	private static Map<String, Integer> loadOpcodes() {
+		// Convert String[] to a map of the value at String[i] to the index i:
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		String[] mnemonics = {
+			"NOP", "HLT", "ADD", "ADI",
+			"SUB", "XOR", "XNO", "IOR",
+			"NOR", "AND", "NAN", "RSH",
+			"LDI", "JMP", "BEQ", "BNE",
+			"BGT", "BLT", "CAL", "RET",
+			"REA", "STO", "GPI", "GPO",
+			"BEL", "PAS", "PAG"
+		};
+		
+		for(int i = 0; i < mnemonics.length; i++) map.put(mnemonics[i], i);
+		
+		return map;
+	}
+	
 	/**
 	 * Repeats a given character a given amount of times.
 	 * @param copies Number of times to repeat
@@ -41,8 +65,9 @@ public class Utils {
 	
 	/**
 	 * Returns a padded hexadecimal representation of the input number.
-	 * @param x Inpuit number. If this value is negative or doesn't fit within
-	 * {@code len} nybbles ({@code len/2} bytes), then the return value <b>will</b> be too long!
+	 * @param x Input number. If this value is negative or doesn't fit within
+	 * {@code len} nybbles ({@code len/2} bytes), then the return value
+	 * <b>will</b> be too long!
 	 * @param len Number of nybbles in the output String
 	 * @return {@code x} as a hexadecimal String, left-padded with zeroes
 	 * @see Utils#paddedBinary(int, int)

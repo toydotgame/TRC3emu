@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.toydotgame.TRC3emu.Log;
+import net.toydotgame.TRC3emu.Utils;
 
 /**
  * Class to handle validating new instructions' token lengths, syntax for
@@ -168,7 +169,7 @@ public class Validator {
 	 * @return Numeric opcode, or {@code null} if not found
 	 */
 	private static Integer parseOpcode(Instruction instruction) {
-		return Instruction.opcodes.get(instruction.tokens.get(0).toUpperCase());
+		return Utils.opcodes.get(instruction.tokens.get(0).toUpperCase());
 	}
 	
 	/**

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.toydotgame.TRC3emu.Log;
+import net.toydotgame.TRC3emu.Utils;
 
 /**
  * Main entrypoint holding assembly methods and dispatching.
