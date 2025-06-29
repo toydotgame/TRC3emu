@@ -2,13 +2,13 @@
 ; Comment 2
 .helloworld 255
 .label2 2
-#label3 2
+#label3 256
 NOP
 HLT
 ; Comment 3
 ADD r1 r2 r3
 ADI 255 r1
-;ADI 256 r1
+ADI 255 r7
 ADI 15 7
 adi 12 1
 

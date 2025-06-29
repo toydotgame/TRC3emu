@@ -60,12 +60,12 @@ public class Assembler {
 	 */
 	public static List<String> main(List<String> source) {
 		// Generate program listing:
-		List<AssemblerInstruction> program = new ArrayList<AssemblerInstruction>();
+		List<Instruction> program = new ArrayList<Instruction>();
 		for(int i = 0; i < source.size(); i++) {
 			String line = source.get(i);
 			/*
 			 * Generate a new instruction from the String value of the current
-			 * line. The AssemblerInstruction constructor takes in this line plus
+			 * line. The Instruction constructor takes in this line plus
 			 * a line index (which we can use the fact that `source` is a list
 			 * from the original input file to yield our line numbers if we just
 			 * index starting at 1 (so i.e. i+1=line index)). The line index is
@@ -80,7 +80,7 @@ public class Assembler {
 			 * INSTRUCTION, as this loop is just yielding the program data section
 			 * of memory.
 			 */
-			AssemblerInstruction instruction = new AssemblerInstruction(line, i+1);
+			Instruction instruction = new Instruction(line, i+1);
 			
 			// 1. Replace opcode mnemonics with opcode strings:
 			instruction.substituteOpcode();
@@ -88,49 +88,43 @@ public class Assembler {
 			//    parse it and add it as an alias/variable
 			defineAlias(instruction);
 			
-			if(instruction.type != AssemblerInstruction.INSTRUCTION) continue;
+			if(instruction.type != Instruction.INSTRUCTION) continue;
 			// Otherwise, valid instruction:
 			program.add(instruction);
 		}
 		
 		// Generate variable listing:
-		List<String> variableData = new ArrayList<String>();
 		int variableCounter = program.size()<<1; // Start with this address and increment
-		for(String alias : aliases.keySet()) {
-			Integer value = aliases.get(alias);
-			if(value != null) continue;
+		for(String alias : variables.keySet()) {
 			// Replace null address with final data location following program data space:
 			aliases.put(alias, variableCounter++);
-			variableData.add(String.valueOf(variables.get(alias)));
 		}
 		
 		// Take previous list of instructions and finish parsing it:
-		List<String> programData = new ArrayList<String>();
-		for(AssemblerInstruction instruction : program) {
+		for(int i = 0; i < program.size(); i++) {
+			Instruction instruction = program.get(i);
+			if(instruction.type != Instruction.INSTRUCTION) continue;
+			
 			// 1. Attempt substituting in alias names if found:
 			substituteAliases(instruction);
 			// 2. Make operand length 2 for the instructions that assume it:
-			validateOperands(instruction);
+			fixOperands(instruction);
 			// 3. Validate operands:
 			validateOverflows(instruction);
-			// `instruction` is not an immutable reference so these void methods
-			// do actually work fine! (It's been a while since I've Java'd)
 			
-			if(instruction.type == AssemblerInstruction.INSTRUCTION)
-				programData.add(instruction.text());
+			if(instruction.type != Instruction.INSTRUCTION) program.remove(i);
 			
 			// TODO: Remove when no longer needed
 			Log.debug(instruction.originalText);
-			Log.debug("    Type: "+instruction.type);
 			Log.debug("    Index: "+instruction.memoryIndex);
 			Log.debug("    Assembled: "+instruction.text());
+			Log.debug("        Valid: "+!(instruction.type == Instruction.INVALID));
 		}
 		
 		// Concatenate two data spaces into one stream:
-		List<String> binary = new ArrayList<String>(programData);
-		binary.addAll(variableData);
-		
-		binary = Encoder.main(binary);
+		List<String> binary = Encoder.main(
+			program, new ArrayList<Integer>(variables.values())
+		);
 		
 		Log.debug("Aliases:\n"+aliases);
 		Log.debug("Variables:\n"+variables);
@@ -144,9 +138,9 @@ public class Assembler {
 	/**
 	 * Raise a syntax error and print a message to go along with it
 	 * @param message Message describing the error
-	 * @param instruction {@link AssemblerInstruction} associated with the error
+	 * @param instruction {@link Instruction} associated with the error
 	 */
-	public static void syntaxError(String message, AssemblerInstruction instruction) {
+	public static void syntaxError(String message, Instruction instruction) {
 		syntaxErrors++;
 		
 		String line = instruction.originalText;
@@ -179,17 +173,17 @@ public class Assembler {
 	 * <br>
 	 * Checks that the alias has not already been defined, and if not, it
 	 * defines it in the list of {@link #aliases}.
-	 * @param instruction {@link AssemblerInstruction} instance
+	 * @param instruction {@link Instruction} instance
 	 */
-	private static void defineAlias(AssemblerInstruction instruction) {
+	private static void defineAlias(Instruction instruction) {
 		String alias = instruction.alias;
 		// If an alias, check that the alias is not already defined, else return
 		switch(instruction.type) {
 			default:
 				return;
-			case AssemblerInstruction.VARIABLE:
-			case AssemblerInstruction.SUBROUTINE:
-			case AssemblerInstruction.DEFINITION:
+			case Instruction.VARIABLE:
+			case Instruction.SUBROUTINE:
+			case Instruction.DEFINITION:
 				if(aliases.containsKey(alias)) {
 					syntaxError("Alias \""+alias+"\" already defined!", instruction);
 					return;
@@ -199,7 +193,7 @@ public class Assembler {
 		// Define new alias if above passed: See javadocs for the instruction
 		// type constants to see the function of each
 		switch(instruction.type) {
-			case AssemblerInstruction.VARIABLE:
+			case Instruction.VARIABLE:
 				try {
 					int value = Integer.parseInt(instruction.tokens.get(1));
 					if(value < 0 || value > 255) throw new NumberFormatException();
@@ -214,11 +208,11 @@ public class Assembler {
 				}
 				
 				break;
-			case AssemblerInstruction.SUBROUTINE:
+			case Instruction.SUBROUTINE:
 				aliases.put(alias, instruction.memoryIndex);
 				
 				break;
-			case AssemblerInstruction.DEFINITION:
+			case Instruction.DEFINITION:
 				try {
 					int value = Integer.parseInt(instruction.tokens.get(1));
 					if(value < 0) throw new NumberFormatException();
@@ -235,10 +229,10 @@ public class Assembler {
 	/**
 	 * Tries to find any uses of an alias in an instruction's operands, and
 	 * substitutes in its respective value if so.
-	 * @param instruction Instance of {@link AssemblerInstruction}, where {@link
-	 * AssemblerInstruction#type}={@link AssemblerInstruction#INSTRUCTION}
+	 * @param instruction Instance of {@link Instruction}, where {@link
+	 * Instruction#type}={@link Instruction#INSTRUCTION}
 	 */
-	private static void substituteAliases(AssemblerInstruction instruction) {
+	private static void substituteAliases(Instruction instruction) {
 		for(int i = 1; i < instruction.tokens.size(); i++) {
 			String operand = instruction.tokens.get(i);
 			if(Utils.isDigital(operand))
@@ -248,7 +242,7 @@ public class Assembler {
 				instruction.tokens.set(i, String.valueOf(aliases.get(operand)));
 			else {
 				syntaxError("Undefined alias \""+operand+"\"!", instruction);
-				instruction.type = AssemblerInstruction.INVALID;
+				instruction.type = Instruction.INVALID;
 			}
 		}
 	}
@@ -268,8 +262,8 @@ public class Assembler {
 	 * arguments need no work</li>
 	 * </ul>
 	 * For these cases, this method will modify the {@link
-	 * AssemblerInstruction#tokens} value for the provided object for later
-	 * validation (in {@link #validateOverflows(AssemblerInstruction)}) and
+	 * Instruction#tokens} value for the provided object for later
+	 * validation (in {@link #validateOverflows(Instruction)}) and
 	 * finally encoding into binary.<br>
 	 * <br>
 	 * Silently does nothing if opcode is not one accounted for in this. It is
@@ -280,12 +274,12 @@ public class Assembler {
 	 * Following execution of this method, it is safe to assume for development
 	 * purposes that the number of tokens in the provided object will match the
 	 * Map {@code desiredTokenCounts} found in
-	 * {@link Validator#validateInstruction(AssemblerInstruction)}.
-	 * @param instruction Instance of {@link AssemblerInstruction}, where {@link
-	 * AssemblerInstruction#type}={@link AssemblerInstruction#INSTRUCTION}
+	 * {@link Validator#validateInstruction(Instruction)}.
+	 * @param instruction Instance of {@link Instruction}, where {@link
+	 * Instruction#type}={@link Instruction#INSTRUCTION}
 	 */
-	private static void validateOperands(AssemblerInstruction instruction) {
-		if(instruction.type == AssemblerInstruction.INVALID) return;
+	private static void fixOperands(Instruction instruction) {
+		if(instruction.type == Instruction.INVALID) return;
 		
 		switch(instruction.opcode) {
 			case 11: // RSH
@@ -300,28 +294,28 @@ public class Assembler {
 	}
 	
 	/**
-	 * Hands off to {@link Validator#validateOverflows(AssemblerInstruction)}.
-	 * Assumes {@link AssemblerInstruction#INSTRUCTION} as input. The return value
+	 * Hands off to {@link Validator#validateOverflows(Instruction)}.
+	 * Assumes {@link Instruction#INSTRUCTION} as input. The return value
 	 * of the {@link Validator} validation, if {@code false}, is used to set the
-	 * {@link AssemblerInstruction#type} of this instance to {@link
-	 * AssemblerInstruction#INVALID}. Otherwise, nothing is done.<br>
+	 * {@link Instruction#type} of this instance to {@link
+	 * Instruction#INVALID}. Otherwise, nothing is done.<br>
 	 * <br>
 	 * An instruction's validity is determined by two things:
 	 * <ol>
 	 * 	<li>There are the correct number of arguments for this instruction. This
-	 * is handled by {@link Validator#validateInstruction(AssemblerInstruction)}
-	 * and {@link Validator#validateAlias(AssemblerInstruction)}</li>
+	 * is handled by {@link Validator#validateInstruction(Instruction)}
+	 * and {@link Validator#validateAlias(Instruction)}</li>
 	 * 	<li>Each argument (operand) fits within the number of bits allocated in
 	 * the instruction word format. This is handled here</li>
 	 * </ol>
-	 * @param instruction Instance of {@link AssemblerInstruction}, where {@link
-	 * AssemblerInstruction#type}={@link AssemblerInstruction#INSTRUCTION}
-	 * @see Validator#validateOverflows(AssemblerInstruction)
-	 * @see Validator#validateAlias(AssemblerInstruction)
-	 * @see Validator#validateInstruction(AssemblerInstruction)
+	 * @param instruction Instance of {@link Instruction}, where {@link
+	 * Instruction#type}={@link Instruction#INSTRUCTION}
+	 * @see Validator#validateOverflows(Instruction)
+	 * @see Validator#validateAlias(Instruction)
+	 * @see Validator#validateInstruction(Instruction)
 	 */
-	private static void validateOverflows(AssemblerInstruction instruction) {
-		if(instruction.type == AssemblerInstruction.INVALID) return;
+	private static void validateOverflows(Instruction instruction) {
+		if(instruction.type == Instruction.INVALID) return;
 		
 		List<String> operands =
 			instruction.tokens.subList(1, instruction.tokens.size());
@@ -336,12 +330,13 @@ public class Assembler {
 					"Invalid operand \""+operand+"\"! Should be a number ≥0.",
 					instruction
 				);
-				instruction.type = AssemblerInstruction.INVALID;
+				instruction.type = Instruction.INVALID;
 				return;
 			}
 		}
+		instruction.operandInts = operandInts;
 		
-		if(!Validator.validateOverflows(instruction.opcode, operandInts))
-			instruction.type = AssemblerInstruction.INVALID;
+		if(!Validator.validateOverflows(instruction))
+			instruction.type = Instruction.INVALID;
 	}
 }

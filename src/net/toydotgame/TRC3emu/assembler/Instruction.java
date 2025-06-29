@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.toydotgame.TRC3emu.Log;
 
 /**
  * Class to hold a single line of assembly source code and its methods to
  * operate on itself.
- * @see #AssemblerInstruction(String, int)
+ * @see #Instruction(String, int)
  */
-public class AssemblerInstruction {
+public class Instruction {
 	// Instance fields:
 	/**
 	 * List containing the space-separated parts of each line.
@@ -19,11 +18,11 @@ public class AssemblerInstruction {
 	public List<String> tokens;
 	/**
 	 * Line # the instruction came from (starts at 1 if {@code
-	 * AssemblerInstruction(String, 0) was used, for example).
+	 * Instruction(String, 0) was used, for example).
 	 */
-	public Integer lineIndex;
+	public final Integer lineIndex;
 	/**
-	 * Type of the source line. If set to {@code AssemblerInstruction#INVALID},
+	 * Type of the source line. If set to {@code Instruction#INVALID},
 	 * operations on an instance of this class will silently fail without raising
 	 * any errors.
 	 */
@@ -31,7 +30,7 @@ public class AssemblerInstruction {
 	/**
 	 * If {@link #type} is {@link #INSTRUCTION}, then this
 	 * field is set. This can be linked to the {@link
-	 * AssemblerInstruction#instructionTypes} Map to see the mapping between
+	 * Instruction#instructionTypes} Map to see the mapping between
 	 * opcode and its type.
 	 */
 	public Integer instructionType;
@@ -53,6 +52,13 @@ public class AssemblerInstruction {
 	 * A copy of the original text (for syntax error pretty-printing).
 	 */
 	public final String originalText;
+	/**
+	 * Integer List of the operands of the instruction, set by {@link
+	 * Assembler#validateOverflows(Instruction)}, and used by {@link
+	 * Validator#validateOverflows(Instruction)} and {@link
+	 * Encoder#encodeInstruction(Instruction
+	 */
+	public List<Integer> operandInts;
 	
 	// Assembly source types:
 	/**
@@ -72,7 +78,7 @@ public class AssemblerInstruction {
 	 * variable is defined in the same way as a definition, but with a {@code .}
 	 * instead:<br>
 	 * {@code .bar 12}
-	 * @see AssemblerInstruction#DEFINITION
+	 * @see Instruction#DEFINITION
 	 */
 	public static final int VARIABLE = 1;
 	/**
@@ -89,16 +95,6 @@ public class AssemblerInstruction {
 	 * {@code #foo 42}
 	 */
 	public static final int DEFINITION = 3;
-	
-	// Instruction types:
-	public static final int NONE = 0;
-	public static final int ALU = 1;
-	public static final int IMM8_TO_REG = 2;
-	public static final int IMM10 = 3;
-	public static final int IMM3_TO_REG = 4;
-	public static final int REG_TO_IMM3 = 5;
-	public static final int IMM3_OR_REG = 6;
-	public static final int REG_ONLY = 7;
 	
 	// Opcodes:
 	public static Map<String, Integer> opcodes = loadOpcodes();
@@ -120,6 +116,41 @@ public class AssemblerInstruction {
 		return map;
 	}
 	
+	// Instruction types:
+	public static final int NONE = 0;
+	public static final int ALU = 1;
+	public static final int IMM8_TO_REG = 2;
+	public static final int IMM10 = 3;
+	public static final int IMM3_TO_REG = 4;
+	public static final int REG_TO_IMM3 = 5;
+	public static final int IMM3_OR_REG = 6;
+	public static final int REG_ONLY = 7;
+	
+	/**
+	 * Map of opcodes to their designated instruction types.
+	 */
+	public static Map<Integer, Integer> instructionTypes = loadInstructionTypes();
+	private static Map<Integer, Integer> loadInstructionTypes() {
+		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+		
+		map.put(0, NONE);
+		map.put(1, NONE);
+		map.put(2, ALU);
+		map.put(3, IMM8_TO_REG);
+		for(int i = 4; i <= 11; i++) map.put(i, ALU);
+		map.put(12, IMM8_TO_REG);
+		for(int i = 13; i <= 18; i++) map.put(i, IMM10);
+		map.put(19, NONE);
+		for(int i = 20; i <= 21; i++) map.put(i, ALU);
+		map.put(22, IMM3_TO_REG);
+		map.put(23, REG_TO_IMM3);
+		map.put(24, NONE);
+		map.put(25, IMM3_OR_REG);
+		map.put(26, REG_ONLY);
+		
+		return map;
+	}
+	
 	/**
 	 * Holds the address of the next instruction. When an instruction is
 	 * sucessfully parsed, its {@link #memoryIndex} is set to the value
@@ -134,11 +165,11 @@ public class AssemblerInstruction {
 	public static int instructionCounter = 0;
 	
 	/**
-	 * Creates a new {@link AssemblerInstruction} object
+	 * Creates a new {@link Instruction} object
 	 * @param line Line of source to parse
 	 * @param index Index # of this line in the source (starting at 0)
 	 */
-	public AssemblerInstruction(String line, int index) {
+	public Instruction(String line, int index) {
 		this.tokens = tokenize(removeComments(line));
 		this.lineIndex = index;
 		this.originalText = line;
@@ -178,7 +209,7 @@ public class AssemblerInstruction {
 	
 	/**
 	 * Returns a reconstruction of the partially- or fully-reconstructed source
-	 * line. (String getter for {@link AssemblerInstruction#tokens} kinda)
+	 * line. (String getter for {@link Instruction#tokens} kinda)
 	 * @return The instruction line
 	 */
 	public String text() {
@@ -187,7 +218,7 @@ public class AssemblerInstruction {
 
 	/**
 	 * Substitute the first token in {@code this.}{@link #tokens} to the numeric
-	 * value from the lookup table {@link AssemblerInstruction#opcodes}.
+	 * value from the lookup table {@link Instruction#opcodes}.
 	 * Silently returns void if this is not an instruction. Raises fatal error
 	 * if {@code this} is an instruction but is not found in the {@code opcodes}
 	 * lookup table.

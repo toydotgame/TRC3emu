@@ -30,7 +30,7 @@ public class Log {
 	/**
 	 * Default exit code for fatal errors that don't specify otherwise
 	 */
-	public static final int DEFAULT_EXIT = 2;
+	private static final int DEFAULT_EXIT = 2;
 	
 	/**
 	 * Set log level

@@ -1,21 +1,22 @@
 package net.toydotgame.TRC3emu.assembler;
 
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.ALU;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.DEFINITION;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.IMM10;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.IMM3_OR_REG;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.IMM3_TO_REG;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.IMM8_TO_REG;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.INSTRUCTION;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.INVALID;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.NONE;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.REG_ONLY;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.REG_TO_IMM3;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.SUBROUTINE;
-import static net.toydotgame.TRC3emu.assembler.AssemblerInstruction.VARIABLE;
+import static net.toydotgame.TRC3emu.assembler.Instruction.ALU;
+import static net.toydotgame.TRC3emu.assembler.Instruction.DEFINITION;
+import static net.toydotgame.TRC3emu.assembler.Instruction.IMM10;
+import static net.toydotgame.TRC3emu.assembler.Instruction.IMM3_OR_REG;
+import static net.toydotgame.TRC3emu.assembler.Instruction.IMM3_TO_REG;
+import static net.toydotgame.TRC3emu.assembler.Instruction.IMM8_TO_REG;
+import static net.toydotgame.TRC3emu.assembler.Instruction.INSTRUCTION;
+import static net.toydotgame.TRC3emu.assembler.Instruction.INVALID;
+import static net.toydotgame.TRC3emu.assembler.Instruction.NONE;
+import static net.toydotgame.TRC3emu.assembler.Instruction.REG_ONLY;
+import static net.toydotgame.TRC3emu.assembler.Instruction.REG_TO_IMM3;
+import static net.toydotgame.TRC3emu.assembler.Instruction.SUBROUTINE;
+import static net.toydotgame.TRC3emu.assembler.Instruction.VARIABLE;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.toydotgame.TRC3emu.Log;
 import net.toydotgame.TRC3emu.Utils;
 
 /**
@@ -23,41 +24,18 @@ import net.toydotgame.TRC3emu.Utils;
  * aliases, and numeric overflows for operands.
  */
 public class Validator {
-	// Map of opcode to its operand type:
-	private static Map<Integer, Integer> instructionTypes = loadInstructionTypes();
-	private static Map<Integer, Integer> loadInstructionTypes() {
-		Map<Integer, Integer> map = new HashMap<Integer, Integer>();
-		
-		map.put(0, NONE);
-		map.put(1, NONE);
-		map.put(2, ALU);
-		map.put(3, IMM8_TO_REG);
-		for(int i = 4; i <= 11; i++) map.put(i, ALU);
-		map.put(12, IMM8_TO_REG);
-		for(int i = 13; i <= 18; i++) map.put(i, IMM10);
-		map.put(19, NONE);
-		for(int i = 20; i <= 21; i++) map.put(i, ALU);
-		map.put(22, IMM3_TO_REG);
-		map.put(23, REG_TO_IMM3);
-		map.put(24, NONE);
-		map.put(25, IMM3_OR_REG);
-		map.put(26, REG_ONLY);
-		
-		return map;
-	}
-	
 	/**
 	 * Sketchy dispatcher method
 	 * @param instruction Instruction to define the type of
-	 * @return The {@link AssemblerInstruction#type} of the line passed in
+	 * @return The {@link Instruction#type} of the line passed in
 	 */
-	public static int main(AssemblerInstruction instruction) {
+	public static int main(Instruction instruction) {
 		// I know this is ugly
 		if(instruction.text().endsWith(":")) { // Subroutine
 			if(validateAlias(instruction, true)) {
 				// instructionCounter holds the index of the next instruction, so
 				// don't modify it, but do set the index of the subroutine to it:
-				instruction.memoryIndex = AssemblerInstruction.instructionCounter<<1;
+				instruction.memoryIndex = Instruction.instructionCounter<<1;
 				return SUBROUTINE;
 			}
 			else return INVALID;
@@ -75,16 +53,16 @@ public class Validator {
 	
 	/**
 	 * Checks the validity of an alias' (subroutine/variable/definition) syntax
-	 * as it appears in the {@link AssemblerInstruction} object passed in. Will
-	 * print {@link Assembler#syntaxError(String, AssemblerInstruction)}s if
+	 * as it appears in the {@link Instruction} object passed in. Will
+	 * print {@link Assembler#syntaxError(String, Instruction)}s if
 	 * checks fail 
 	 * @param instruction The source line to check
 	 * @param subroutine If the instruction is of type {@link
-	 * AssemblerInstruction#SUBROUTINE} or not
+	 * Instruction#SUBROUTINE} or not
 	 * @return {@code true} if the alias has correct token length and a non-
 	 * digital name, {@code false} if either of the two aforementioned checks fail
 	 */
-	private static boolean validateAlias(AssemblerInstruction instruction, boolean subroutine) {
+	private static boolean validateAlias(Instruction instruction, boolean subroutine) {
 		// Check if the number of tokens in the instruction is what we want:
 		int desiredTokens = 2;
 		if(subroutine) desiredTokens = 1;
@@ -110,26 +88,26 @@ public class Validator {
 	
 	/**
 	 * Validates the syntax is correct for the given {@link
-	 * AssemblerInstruction#instructionType}. Specifically, this method <b>
+	 * Instruction#instructionType}. Specifically, this method <b>
 	 * checks that the number of arguments <u>only</u> is correct</b>.<br>
 	 * <br>
-	 * The control flow of {@link #main(AssemblerInstruction)} seems to suggest
+	 * The control flow of {@link #main(Instruction)} seems to suggest
 	 * that comments can appear as the input instruction to this method, however
-	 * the value of {@link AssemblerInstruction#tokens} is linted using {@link
-	 * AssemblerInstruction#removeComments(String)}, therefore the text of this
+	 * the value of {@link Instruction#tokens} is linted using {@link
+	 * Instruction#removeComments(String)}, therefore the text of this
 	 * instruction will be the instruction only, or {@code ""} if the line was
 	 * just a comment.<br>
 	 * <br>
 	 * This returns {@code false} if the length of the instruction's text is
 	 * less than 3 (the minimum length of a lone opcode mnemonic), meaning
 	 * <i>finally</i> that comments' types are set to {@link
-	 * AssemblerInstruction#INVALID}, in turn meaning that assembly operations
+	 * Instruction#INVALID}, in turn meaning that assembly operations
 	 * on instances that were comments will silently fail in further parsing.
-	 * @param instruction {@link AssemblerInstruction} instance, of type
-	 * {@link AssemblerInstruction#INSTRUCTION}
+	 * @param instruction {@link Instruction} instance, of type
+	 * {@link Instruction#INSTRUCTION}
 	 * @return {@code true} if syntactically correct, {@code false} otherwise
 	 */
-	private static boolean validateInstruction(AssemblerInstruction instruction) {
+	private static boolean validateInstruction(Instruction instruction) {
 		// Mnemonics alone are at least 3 chars long, so anything less fails
 		int length = instruction.text().length();
 		if(length < 3) {
@@ -140,8 +118,8 @@ public class Validator {
 		
 		// Type is obviously INSTRUCTION,
 		instruction.opcode = parseOpcode(instruction);
-		instruction.instructionType = instructionTypes.get(instruction.opcode);
-		instruction.memoryIndex = AssemblerInstruction.instructionCounter++<<1; // Set to counter<<1, then incr. counter
+		instruction.instructionType = Instruction.instructionTypes.get(instruction.opcode);
+		instruction.memoryIndex = Instruction.instructionCounter++<<1; // Set to counter<<1, then incr. counter
 		
 		// Count of desired tokens in instruction, including opcode:
 		Map<Integer, Integer> desiredTokenCounts = new HashMap<Integer, Integer>();	
@@ -174,8 +152,10 @@ public class Validator {
 		
 		// Raise syntaxError() if invalid, return true otherwise
 		if(!isValid) {
+			desiredSize -= 1; // Adjust to number of arguments, not total tokens
+			actualSize -= 1;
 			Assembler.syntaxError(
-				"Wrong number of tokens! Should be "+desiredSize+", found "+actualSize+".", instruction
+				"Wrong number of arguments for instruction! Should be "+desiredSize+", found "+actualSize+".", instruction
 			);
 			return false;
 		}
@@ -185,17 +165,107 @@ public class Validator {
 	/**
 	 * Takes the first element in this instruction's {@link #tokens} List, and
 	 * looks it up in a lookup table.
-	 * @param instruction {@link AssemblerInstruction} instance
+	 * @param instruction {@link Instruction} instance
 	 * @return Numeric opcode, or {@code null} if not found
 	 */
-	private static Integer parseOpcode(AssemblerInstruction instruction) {
-		return AssemblerInstruction.opcodes.get(instruction.tokens.get(0).toUpperCase());
+	private static Integer parseOpcode(Instruction instruction) {
+		return Instruction.opcodes.get(instruction.tokens.get(0).toUpperCase());
 	}
 	
-	public static boolean validateOverflows(Integer opcode, List<Integer> operands) {
-		// TODO: Implement. We know now the provided instruction always has a
-		// fixed operand list size, and that all aliases handled. This function
-		// requires very little error handling regarding those cases as such
+	/**
+	 * Given by now, we have validated the number of operands for this
+	 * instruction instance, and that all operands are numeric, all we need to
+	 * do now is check that all operands are within the bounds of 0 to some
+	 * maximum value.<br>
+	 * <br>
+	 * This method takes in an instruction instance, checks its opcode against
+	 * the {@link Validator#instructionTypes} lookup table, takes a List of
+	 * numeric operands (already tested as numeric and provided by {@link
+	 * Assembler#validateOverflows(Instruction)}, and checks that they
+	 * are {@code >= 0} and also {@code <=} some integer maximum allowed value,
+	 * in order to check they will fit in the designated <i>n</i> bits in the
+	 * encoded instruction.<br>
+	 * <br>
+	 * After this instruction has been validated here, it is safe to assume it
+	 * is <b>completely valid</b> and ready for encoding.
+	 * @param instruction {@link Instruction} instance, needed to yield
+	 * {@link Instruction#opcode} instance field and also passed along
+	 * to {@link Assembler#syntaxError(String, Instruction)} for the
+	 * cases of invalid syntax
+	 * @param operands Integer List of the operands of this function, already
+	 * not {@code null} and known to be {@code int}s
+	 * @return {@code true} if the instruction has in-bounds operands, {@code
+	 * false} otherwise
+	 * @see Validator#failUnderOverflow(List, int, Instruction)
+	 */
+	public static boolean validateOverflows(Instruction instruction) {
+		List<Integer> args = instruction.operandInts;
+		switch(instruction.instructionType) {
+			case NONE:
+				return true; // No operands to check
+			case ALU:
+			case IMM3_TO_REG:
+			case REG_TO_IMM3:
+			case IMM3_OR_REG:
+			case REG_ONLY:
+				return failUnderOverflow(args, 7, instruction);
+			case IMM8_TO_REG:
+				if(!failUnderOverflow(args.get(0), 255, instruction))
+					return false;
+				if(!failUnderOverflow(args.get(1), 7, instruction))
+					return false;
+				
+				return true;
+			case IMM10:
+				return failUnderOverflow(args, 1023, instruction);
+			default:
+				Log.fatalError("(Validator) Instruction type for opcode `"+instruction.opcode+"` unimplemented!");
+		}
+		return true;
+	}
+	
+	/**
+	 * Checks that the input List of integers are within the range {@code 0}–
+	 * {@code max} (inclusive). Will throw an error if any value to check is
+	 * {@code null}, however this method is called at {@link
+	 * Validator#validateOverflows(Integer, List)}, and no value in the input
+	 * List there may be {@code null} because {@link
+	 * Assembler#validateOverflows(Instruction)} catches that case.
+	 * @param args List of integers to check
+	 * @param max Maximum value allowed
+	 * @param instruction {@link Instruction} instance (for syntax
+	 * error logging)
+	 * @return {@code true} if all values are within the allowed range, {@code
+	 * false} otherwise
+	 */
+	private static boolean failUnderOverflow(List<Integer> args, int max, Instruction instruction) {
+		for(Integer arg : args) {
+			if(arg < 0 || arg > max) {
+				Assembler.syntaxError("Value `"+arg+"` out of bounds! Must be 0-"+max+".", instruction);
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	/**
+	 * Mirrors {@link
+	 * Validator#failUnderOverflow(List, int, Instruction)}'s function.
+	 * Checks a value is within the range {@code 0}–{@code max} (inclusive).
+	 * @param arg Integer to check
+	 * @param max Maximum value allowed
+	 * @param instruction {@link Instruction} instance (for syntax
+	 * error logging)
+	 * @return {@code true} if value is within the allowed range, {@code false}
+	 * otherwise
+	 * @see Validator#failUnderOverflow(List, int, Instruction)
+	 */
+	private static boolean failUnderOverflow(Integer arg, int max, Instruction instruction) {
+		if(arg < 0 || arg > max) {
+			Assembler.syntaxError("Value `"+arg+"` out of bounds! Must be 0-"+max+".", instruction);
+			return false;
+		}
+		
 		return true;
 	}
 }
