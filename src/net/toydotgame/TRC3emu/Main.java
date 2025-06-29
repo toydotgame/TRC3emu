@@ -16,6 +16,7 @@ public class Main {
 	// Cmdline args yield these settings
 	private static final int ASSEMBLE = 0;
 	private static final int EMULATE = 1;
+	private static final int HELP = 2;
 	public static int mode = -1;
 	private static String inputPath;
 	private static String outputPath;
@@ -31,6 +32,9 @@ public class Main {
 				break;
 			case EMULATE:
 				emulate();
+				break;
+			case HELP:
+				help(options);
 				break;
 			default:
 				Log.exit("Unknown mode \""+mode+"\"!");
@@ -49,11 +53,15 @@ public class Main {
 		Option emulate = Option.builder("e")
 			.longOpt("emulate")
 			.desc("Emulate a previously created binary.")
-			.hasArg()
-			.argName("binary")
+			.hasArg().argName("binary")
+			.build();
+		Option help = Option.builder("h")
+			.longOpt("help")
+			.desc("Print help message.")
 			.build();
 		mode.addOption(assemble);
 		mode.addOption(emulate);
+		mode.addOption(help);
 		mode.setRequired(true);
 		
 		Option verbose = new Option("v",
@@ -90,15 +98,14 @@ public class Main {
 			} else if(cmdline.hasOption("e")) {
 				mode = EMULATE;
 				inputPath = cmdline.getOptionValue("e");
+			} else if(cmdline.hasOption("h")) {
+				mode = HELP;
 			}
 			
 			if(cmdline.hasOption("v")) Log.setLogLevel(Log.VERBOSE);
 		} catch(ParseException e) {
-			HelpFormatter help = new HelpFormatter();
-			
 			System.err.println(e.getMessage());
-			help.printHelp("TRC3emu.jar <-a | -e <file>> [-v] [-o <output>]", options);
-			
+			help(options);			
 			System.exit(1);
 		}
 	}
@@ -126,5 +133,11 @@ public class Main {
 	private static void emulate() {
 		System.out.println("Emulator called.");
 		// TODO: Implement
+	}
+
+	private static void help(Options options) {
+		HelpFormatter help = new HelpFormatter();
+		
+		help.printHelp("TRC3emu.jar <[-a | -e <file>] | -h> [-v] [-o <output>]", options);
 	}
 }
