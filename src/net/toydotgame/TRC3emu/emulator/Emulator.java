@@ -54,12 +54,12 @@ public class Emulator {
 					break;
 				case 1: // HLT
 					break; // while() loop terminates if opcode is 1
-				case 2:
+				case 2: // ADD
 					ALU.main(operands, ALU.ADD);
 					break;
-				case 3:
+				case 3: // ADI
 					imm = operands>>3;
-					c = operands&0x3;
+					c = operands&0x7;
 					regfile.write(c,
 						regfile.read(c)+imm
 					);

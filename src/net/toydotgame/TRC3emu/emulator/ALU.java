@@ -55,9 +55,9 @@ public class ALU extends Emulator {
 	
 	private static int[] decodeOperands(int args) {
 		return new int[]{
-			args>>6&0x3,
-			args>>3&0x3,
-			args&0x3
+			args>>6&0x7,
+			args>>3&0x7,
+			args&0x7
 		};
 	}
 }
