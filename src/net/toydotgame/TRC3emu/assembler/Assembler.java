@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.toydotgame.TRC3emu.Log;
-import net.toydotgame.TRC3emu.Utils;
 
 /**
  * Main entrypoint holding assembly methods and dispatching.
@@ -131,7 +130,6 @@ public class Assembler {
 		for(int i = 0; i < binary.size(); i++) {
 			String line = binary.get(i);
 			
-			String index = String.format("%04X", i); // 1 line in `binary` is 1 byte, so just use the index
 			String srcLine = "";
 			// i>>1 yields floor(i/2), which we can take as the instruction # in
 			// the binary
@@ -151,7 +149,7 @@ public class Assembler {
 				srcLine = "\t."+variableKey+" "+String.valueOf(variables.get(variableKey));
 			}
 			
-			line = index+": "+line+srcLine;
+			line = Utils.paddedHex(i, 4)+": "+line+srcLine; // 1 line in `binary` is 1 byte, so just use the index
 			binary.set(i, line);			
 		}
 		

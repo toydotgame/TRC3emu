@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.toydotgame.TRC3emu.Log;
-import net.toydotgame.TRC3emu.Utils;
 
 /**
  * Class to handle validating new instructions' token lengths, syntax for

@@ -44,25 +44,11 @@ public class Encoder {
 		// Convert variables from 0-255 values to 8-bit words:
 		List<String> encodedVariables = new ArrayList<String>();
 		for(int value : variables) // We know variableData is all ints
-			encodedVariables.add(paddedBinary(value, 8));
+			encodedVariables.add(Utils.paddedBinary(value, 8));
 		
 		List<String> binary = new ArrayList<String>(encodedProgram);
 		binary.addAll(encodedVariables);
 		return binary;
-	}
-	
-	/**
-	 * Returns a padded binary representation of the input number.
-	 * @param x Input number. If this value is negative or doesn't fit within
-	 * {@code len} bits, then the return value <b>will</b> be too long!
-	 * @param len Number of bits in output String
-	 * @return {@code x} as a binary String, left-padded with zeroes
-	 */
-	private static String paddedBinary(int x, int len) {
-		if(len <= 0) len = 1; // String.format() requires a non-zero value
-		
-		return String.format("%"+len+"s", Integer.toBinaryString(x))
-			.replace(" ", "0");
 	}
 
 	/**
@@ -77,53 +63,53 @@ public class Encoder {
 	private static String[] encodeInstruction(Instruction instruction) {
 		String instructionStr = "";
 		
-		instructionStr += paddedBinary(instruction.opcode, 5);
+		instructionStr += Utils.paddedBinary(instruction.opcode, 5);
 		
 		List<Integer> args = instruction.operandInts;
 		switch(instruction.instructionType) {
 			case NONE:
-				instructionStr += paddedBinary(0, 11);
+				instructionStr += Utils.paddedBinary(0, 11);
 				
 				break;
 			case ALU:
 				instructionStr += "00";
 				for(int i = 0; i < 3; i++)
-					instructionStr += paddedBinary(args.get(i), 3);
+					instructionStr += Utils.paddedBinary(args.get(i), 3);
 				
 				break;
 			case IMM8_TO_REG:
-				instructionStr += paddedBinary(args.get(0), 8);
-				instructionStr += paddedBinary(args.get(1), 3);
+				instructionStr += Utils.paddedBinary(args.get(0), 8);
+				instructionStr += Utils.paddedBinary(args.get(1), 3);
 				
 				break;
 			case IMM10:
-				instructionStr += paddedBinary(args.get(0), 10);
+				instructionStr += Utils.paddedBinary(args.get(0), 10);
 				instructionStr += "0";
 				
 				break;
 			case IMM3_TO_REG:
 				instructionStr += "00000";
-				instructionStr += paddedBinary(args.get(0), 3);
-				instructionStr += paddedBinary(args.get(1), 3);
+				instructionStr += Utils.paddedBinary(args.get(0), 3);
+				instructionStr += Utils.paddedBinary(args.get(1), 3);
 				
 				break;
 			case REG_TO_IMM3:
 				instructionStr += "00";
-				instructionStr += paddedBinary(args.get(0), 3);
-				instructionStr += paddedBinary(args.get(1), 3);
+				instructionStr += Utils.paddedBinary(args.get(0), 3);
+				instructionStr += Utils.paddedBinary(args.get(1), 3);
 				instructionStr += "000";
 				
 				break;
 			case IMM3_OR_REG:
-				instructionStr += paddedBinary(args.get(0), 3);
+				instructionStr += Utils.paddedBinary(args.get(0), 3);
 				instructionStr += "00";
-				instructionStr += paddedBinary(args.get(1), 3);
+				instructionStr += Utils.paddedBinary(args.get(1), 3);
 				instructionStr += "000";
 				
 				break;
 			case REG_ONLY:
 				instructionStr += "00000000";
-				instructionStr += paddedBinary(args.get(0), 3);
+				instructionStr += Utils.paddedBinary(args.get(0), 3);
 				
 				break;
 			default:
