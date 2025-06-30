@@ -15,12 +15,13 @@ public class RegisterFile {
 	public void write(int address, int data) {
 		if(address == 0) return;
 		address--; // Shift index down by 1
-		dataRegisters[address] = data&0xFF;
+		this.dataRegisters[address] = data&0xFF;
 	}
 	
 	/**
 	 * Read from a register (0–7). {@code r0} is the <b>zero register</b>,
-	 * meaning it will only read a value of {@code 0x0}.
+	 * meaning it will only read a value of {@code 0x0}. Inherently, due to
+	 * {@link #write(int, int)}, all values returned will be from 0–255.
 	 * @param address Address to read from
 	 * @return {@code 0} if {@code address=0}, 8-bit unsigned integer in the
 	 * desired register otherwise
@@ -28,13 +29,13 @@ public class RegisterFile {
 	public int read(int address) {
 		if(address == 0) return 0;
 		address--; // Shift index down
-		return dataRegisters[address];
+		return this.dataRegisters[address];
 	}
 	
 	public String enumerate() {
 		List<String> values = new ArrayList<String>();
 		for(int i = 1; i <= 7; i++)
-			values.add("r"+i+"="+read(i));
+			values.add("r"+i+"="+this.read(i));
 		
 		return "["+String.join(", ", values)+"]";
 	}

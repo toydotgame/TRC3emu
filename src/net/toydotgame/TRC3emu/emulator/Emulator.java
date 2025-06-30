@@ -8,7 +8,7 @@ public class Emulator {
 	/**
 	 * Program counter, counts 0–1023.
 	 */
-	private static int pc;
+	public static int pc;
 	/**
 	 * Instruction register, bottom two bytes forms the instruction.
 	 */
@@ -31,6 +31,11 @@ public class Emulator {
 	 */
 	public static RegisterFile regfile = new RegisterFile();
 	/**
+	 * Stack.
+	 * @see Stack
+	 */
+	public static Stack stack = new Stack();
+	/**
 	 * Approximate clock speed in Hz. This value is used for the additional
 	 * <i>delay</i> per instruction, because the processing time Java takes
 	 * per instruction is negligible.<br>
@@ -45,6 +50,11 @@ public class Emulator {
 	 * result of the division to an {@code int}</b>!
 	 */
 	private static final double CLOCK_SPEED = 1000;
+	/**
+	 * Carry and zero flags. Initialised to {@code false} (does not mirror
+	 * Minecraft).
+	 */
+	public static boolean C, Z;
 	
 	@SuppressWarnings("unused") // Purely for the warning when CLOCK_SPEED is -1
 	public static void main(List<Integer> memory) {
@@ -110,15 +120,31 @@ public class Emulator {
 					regfile.write(c, imm);
 					break;
 				case 13: // JMP
-					imm = operands>>1;
-					pc = imm-1; // Account for pc++ run each time. This does not mirror Minecraft
+					jump(operands);
 					break;
-				case 14:
-				case 15:
-				case 16:
-				case 17:
-				case 18:
-				case 19:
+				case 14: // BEQ, aka branch if $Z
+					if(Z) jump(operands);
+					break;
+				case 15: // BNE, aka branch if !$Z
+					if(!Z) jump(operands);
+					break;
+				case 16: // BGT, aka branch if $C
+					if(C) jump(operands);
+					break;
+				case 17: // BLT, aka branch if !$C
+					if(!C) jump(operands);
+					break;
+				case 18: // CAL
+					stack.push(pc+1);
+					jump(operands);
+					break;
+				case 19: // RET
+					// Even though jump jumps to the desired instruction #, it
+					// expects an 11-bit operand reading, so we shift to 11-bit:
+					int t = stack.pop()<<1;
+					Log.error("t: "+t);
+					jump(t);
+					break;
 				case 20:
 				case 21:
 				case 22:
@@ -151,6 +177,7 @@ public class Emulator {
 		return ram.get(address)&0xFF;
 	}
 	
+	@SuppressWarnings("unused") // TODO: Remove warning suppressor
 	private static void writeByte(int address, int value) {
 		ram.set(address, value&0xFF);
 	}
@@ -168,5 +195,20 @@ public class Emulator {
 	
 	private static int decodeOperands() {
 		return ir&0x7FF; // Mask only bottom 11 bits
+	}
+	
+	/**
+	 * Set PC to desired instruction # (target {@code instruction} (0–1023)is
+	 * equivalent to desiring to jump to memory address {@code instruction<<1}
+	 * (0–2047).<br>
+	 * <br>
+	 * This method will set the PC to one <b>below</b> the desired target,
+	 * because in {@link #main(List)}, there's a {@code pc++} call regardless of
+	 * the instruction called.
+	 * @param instruction Program counter value to jump to
+	 */
+	private static void jump(int instruction) {
+		// Account for pc++ run each time: This does not mirror Minecraft
+		pc = (instruction>>1)-1;
 	}
 }
