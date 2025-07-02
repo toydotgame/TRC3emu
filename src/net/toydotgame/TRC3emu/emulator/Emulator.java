@@ -46,7 +46,8 @@ public class Emulator {
 	/**
 	 * Approximate clock speed in Hz. This value is used for the additional
 	 * <i>delay</i> per instruction, because the processing time Java takes
-	 * per instruction is negligible.<br>
+	 * per instruction is negligible. A value less than or equal to {@code -1}
+	 * will unrestrict the emulator's clock.<br>
 	 * <br>
 	 * To match TRC3's processing speed, a value of approximately {@code 1d/12}
 	 * is needed.<br>
@@ -57,7 +58,7 @@ public class Emulator {
 	 * like {@code 1.0} or {@code 1d}, otherwise Java will concatenate the
 	 * result of the division to an {@code int}</b>!
 	 */
-	private static final double CLOCK_SPEED = 1000;
+	private static final double CLOCK_SPEED = -1;
 	/**
 	 * Carry and zero flags. Initialised to {@code false} (does not mirror
 	 * Minecraft).

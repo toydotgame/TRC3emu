@@ -35,7 +35,11 @@ public class Assembler {
 	private static Map<String, Integer> aliases = initAliases();
 	private static Map<String, Integer> initAliases() { // Assembler aliases
 		Map<String, Integer> map = new HashMap<String, Integer>();
-		for(int i = 0; i < 8; i++) map.put("r"+i, i); // Register aliases
+		for(int i = 0; i < 8; i++) {
+			map.put("r"+i, i); // Register aliases
+			map.put("p"+i, i); // GPIO ports
+		}
+		for(int i = 32; i <= 126; i++) map.put("\""+(char)i+"\"", i); // Printable ASCII
 		return map;
 	}
 	
