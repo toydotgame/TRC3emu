@@ -187,11 +187,12 @@ public class Emulator {
 					jump(stack.pop()<<1);
 					break;
 				case 20: // REA
-				case 21: // STO
+				case 21: // STO (same operands)
 					a = regfile.read(operands>>6&0x7);
 					imm = operands>>3&0x7;
 					c = operands&0x7;
 					
+					// Handle REA and STO differently:
 					if(opcode == 20) regfile.write(c, fetchByte(page, a+imm));
 					else writeByte(page, a+imm, regfile.read(c));
 					break;
