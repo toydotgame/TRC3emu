@@ -91,7 +91,10 @@ public class Emulator {
 	 */
 	public static boolean terminalMode;
 	private static Scanner scanner = new Scanner(System.in);
-	private static Terminal terminal;
+	/**
+	 * Public for the purposes of halt dimming in {@link Main#emulate()}.
+	 */
+	public static Terminal terminal;
 	
 	@SuppressWarnings("unused") // Purely for the warning when CLOCK_SPEED is -1
 	public static void main(List<Integer> memory) {
@@ -198,7 +201,10 @@ public class Emulator {
 					regfile.write(c, gpioInput(imm));
 					break;
 				case 23: // GPO
-					Log.fatalError("GPIO instructions not yet implemented!"); // TODO
+					a = regfile.read(operands>>6&0x7);
+					imm = operands>>3&0x7;
+					
+					gpioOutput(imm, a);
 					break;
 				case 24: // BEL
 					bell();
@@ -353,12 +359,7 @@ public class Emulator {
 	
 	private static int gpioInput(int port) {
 		if(terminalMode) {
-			// TODO: Request char input from terminal UI, find a way to block
-			// here until that happens
-			
-			terminal.in();
-			
-			return 0; // TODO
+			return terminal.in();
 		}
 				
 		int input = -1;
@@ -374,5 +375,14 @@ public class Emulator {
 		}
 		
 		return input;
+	}
+	
+	private static void gpioOutput(int port, int data) {
+		if(terminalMode) {
+			terminal.out(data);
+			return;
+		}
+		
+		Log.gpioPrompt("Output from port "+port+": "+data+"\n");
 	}
 }

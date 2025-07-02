@@ -184,6 +184,7 @@ public class Main {
 		
 		stallUntilAudioDone(Emulator.bell);
 		Log.log("Emulator halted!");
+		if(Emulator.terminalMode) Emulator.terminal.dim(); 
 	}
 	
 	/**
