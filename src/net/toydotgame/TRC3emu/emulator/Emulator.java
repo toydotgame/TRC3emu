@@ -1,7 +1,14 @@
 package net.toydotgame.TRC3emu.emulator;
 
+import java.io.IOException;
 import java.util.List;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import net.toydotgame.TRC3emu.Log;
+import net.toydotgame.TRC3emu.Main;
 import net.toydotgame.TRC3emu.Utils;
 
 public class Emulator {
@@ -55,6 +62,12 @@ public class Emulator {
 	 * Minecraft).
 	 */
 	public static boolean C, Z;
+	/**
+	 * Stores the current page for memory reads, used by the memory
+	 * read/{@code REA} instruction.
+	 */
+	private static int page; // = 0
+	public static Clip bell; // Expose Clip instance for logic in Main
 	
 	@SuppressWarnings("unused") // Purely for the warning when CLOCK_SPEED is -1
 	public static void main(List<Integer> memory) {
@@ -141,17 +154,34 @@ public class Emulator {
 				case 19: // RET
 					// Even though jump jumps to the desired instruction #, it
 					// expects an 11-bit operand reading, so we shift to 11-bit:
-					int t = stack.pop()<<1;
-					Log.error("t: "+t);
-					jump(t);
+					jump(stack.pop()<<1);
 					break;
-				case 20:
-				case 21:
-				case 22:
-				case 23:
-				case 24:
-				case 25:
-				case 26:
+				case 20: // REA
+				case 21: // STO
+					a = regfile.read(operands>>6&0x7);
+					imm = operands>>3&0x7;
+					c = operands&0x7;
+					
+					if(opcode == 20) regfile.write(c, fetchByte(page, a+imm));
+					else writeByte(page, a+imm, regfile.read(c));
+					break;
+				case 22: // GPI
+				case 23: // GPO
+					Log.fatalError("GPIO instructions not yet implemented!"); // TODO
+					break;
+				case 24: // BEL
+					bell();
+					break;
+				case 25: // PAS
+					imm = operands>>8&0x7;
+					b = regfile.read(operands>>3&0x7);
+					page = imm|b; // Cannot exceed 7
+					Log.error("PAS: "+page);
+					break;
+				case 26: // PAG
+					c = operands&0x7;
+					regfile.write(c, page);
+					break;
 				default:
 					Log.fatalError("Unimplemented opcode `"+opcode+"`!");
 			}
@@ -171,15 +201,42 @@ public class Emulator {
 			
 			pc++;
 		}
+		
+		if(pc == 1024) Log.debug("Reached end of memory!");
 	}
 	
+	/**
+	 * Fetches a byte using an absolute address. Designed for use in system
+	 * internals rather than by the instruction set.
+	 * @param address Byte address from 0–2047
+	 * @return Memory value from that address
+	 * @see #fetchByte(int, int)
+	 */
 	private static int fetchByte(int address) {
-		return ram.get(address)&0xFF;
+		return ram.get(address)&0xFF; // Sanitise just in case memory value isn't reliable
+	}
+	/**
+	 * Fetches a byte using a page number and address (probably from a
+	 * register). This one <i>is</i> designed for use by the instruction set.
+	 * @param page Page, 0–7
+	 * @param address Byte address from 0–255 within page
+	 * @return Memory value from that address
+	 * @see #fetchByte(int)
+	 */
+	private static int fetchByte(int page, int address) {
+		return ram.get((page<<8)+address)&0xFF;
 	}
 	
-	@SuppressWarnings("unused") // TODO: Remove warning suppressor
-	private static void writeByte(int address, int value) {
-		ram.set(address, value&0xFF);
+	/**
+	 * Writes a value to RAM. Designed for use by the instruction set.
+	 * @param page Page, 0–7
+	 * @param address Byte address from 0–255 within page
+	 * @param value Byte to write
+	 * @see #fetchByte(int, int)
+	 */
+	private static void writeByte(int page, int address, int value) {
+		Log.error("Writing value "+(value&0xFF)+" to address "+Integer.toBinaryString((page<<8)+address));
+		ram.set((page<<8)+address, value&0xFF);
 	}
 	
 	private static int fetchInstruction() {
@@ -210,5 +267,56 @@ public class Emulator {
 	private static void jump(int instruction) {
 		// Account for pc++ run each time: This does not mirror Minecraft
 		pc = (instruction>>1)-1;
+	}
+	
+	/**
+	 * Ring the bell sound ({@code ring.wav}) when called. This method will
+	 * stall in a busy-loop for the time it takes for {@link
+	 * javax.sound.sampled.Clip Clip} to begin playing the sound. The purpose of
+	 * this stall is so that any check—be it immediately after a call to this
+	 * method or much later, will see that the bell is playing if we have called
+	 * it, rather than seeing {@code false} for a small amount of time before
+	 * {@link javax.sound.sampled.DataLine#start()} is able to dispatch it.<br>
+	 * <br>
+	 * In {@link Main#emulate()}, there is a call right before exiting to check
+	 * if {@link #bell}{@link javax.sound.sampled.DataLine#isRunning()
+	 * .isRunning()} is {@code true}, and if so, it will busy-loop until that
+	 * value becomes {@code false}, when the program finally exits.
+	 * @see Main#stallUntilAudioDone(boolean)
+	 */
+	private static void bell() {
+		AudioInputStream source = null; // Make compiler happy
+		try {
+			source = AudioSystem.getAudioInputStream( // Create sample stream from URL
+				Main.class.getResource("/ring.wav") // Yield URL of JAR resource
+			);
+		} catch (UnsupportedAudioFileException e) {
+			Log.fatalError("BEL sound effect is not a wave file!");
+		} catch (IOException e) {
+			Log.fatalError("Couldn't find BEL sound effect in JAR file!"
+				+"Did you make sure to add `media/` to the build path?");
+		}
+		
+		try {
+			// Load the sample as a Clip, meaning it is entirely loaded into memory
+			// rather than streamed and played live:
+			bell = AudioSystem.getClip();
+			bell.open(source); // Load sample from input stream
+		} catch (LineUnavailableException e) {
+			Log.fatalError("Line not available to play BEL sound!");
+		} catch (IOException e) {
+			Log.fatalError("Couldn't find BEL sound effect in JAR file!" // Duplicate of above
+				+"Did you make sure to add `media/` to the build path?");
+		}
+		
+		bell.start();
+		
+		while(true) { // Busy loop TERRIBLE!!!
+			if(bell.isRunning()) break;
+			
+			try {
+				Thread.sleep(1); // At least slow down busy loop a bit
+			} catch (InterruptedException e) {} // User probably killed us, so the bell crashing is desired behaviour. Don't create an error 
+		}
 	}
 }

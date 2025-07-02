@@ -3,6 +3,7 @@ package net.toydotgame.TRC3emu;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import javax.sound.sampled.Clip;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -143,10 +144,15 @@ public class Main {
 		// Initialise empty fixed-size memory map:
 		List<Integer> memory = Arrays.asList(new Integer[2048]);
 		Collections.fill(memory, 0);
+		
 		// Read into memory:
 		int bytesRead = 0;
 		for(int i = 0; i < binary.size(); i++) {
-			String word = binary.get(i).split(" ", 3)[1];
+			String[] binaryLine = binary.get(i).split(" ", 3);
+			String word;
+			if(binaryLine.length == 1) word = binaryLine[0]; // Normal binary
+			else word = binaryLine[1];                       // Verbose binary
+			
 			try {
 				int value = Integer.parseInt(word, 2);
 				if(value < 0 || value > 255) throw new NumberFormatException();
@@ -161,7 +167,22 @@ public class Main {
 		// Pass memory map into emulator: This is the end of what we need to do
 		Emulator.main(memory);
 		
+		stallUntilAudioDone(Emulator.bell);
 		Log.log("Emulator halted!");
+	}
+	
+	/**
+	 * Stall with a busy-loop if {@link Emulator#bell} is found to be playing
+	 * @param audioPlaying Pass in the value of {@link Emulator#bell}{@link
+	 * javax.sound.sampled.DataLine#isRunning() .isRunning()}
+	 * @see Emulator#bell()
+	 */
+	private static void stallUntilAudioDone(Clip clip) {
+		while(clip.isRunning()) { // Busy loop is HORRID I know, but by this point we have literally nothing else to do
+			try {
+				Thread.sleep(1); // At least pace ourselves to avoid resource starvation or idk
+			} catch (InterruptedException e) {} // If we are interrupted, so be it
+		}
 	}
 
 	private static void help(Options options) {
