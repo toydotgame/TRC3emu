@@ -91,13 +91,13 @@ public class Emulator {
 	 */
 	public static boolean terminalMode;
 	private static Scanner scanner = new Scanner(System.in);
+	private static Terminal terminal;
 	
 	@SuppressWarnings("unused") // Purely for the warning when CLOCK_SPEED is -1
 	public static void main(List<Integer> memory) {
 		// Load memory into class:
 		ram = memory;
 		// Create terminal if needed: Will spawn a window
-		Terminal terminal = null;
 		if(terminalMode) terminal = new Terminal();
 		
 		while(opcode != 1 && pc < 1024) {
@@ -355,6 +355,8 @@ public class Emulator {
 		if(terminalMode) {
 			// TODO: Request char input from terminal UI, find a way to block
 			// here until that happens
+			
+			terminal.in();
 			
 			return 0; // TODO
 		}
