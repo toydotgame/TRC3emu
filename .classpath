@@ -8,6 +8,5 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/TRC3emu/lib/commons-cli-1.9.0-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="lib/jna-5.17.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
