@@ -71,17 +71,29 @@ public class Main {
 		Option verbose = new Option("v",
 			"verbose",
 			false,
-			"Print detailed step-by-step information."
+			"Print detailed step-by-step information. If -t, --terminal mode is set, then"
+			+"this option is always overridden to be false."
+		);
+		
+		Option terminal = new Option("t",
+			"terminal",
+			false,
+			"(Optional) Spawns a window where GPI/GPO instructions input/output from/to."
+			+"This option is ignored when -a, --assemble is set."
 		);
 		
 		Option output = Option.builder("o")
 			.longOpt("output")
-			.desc("(Optional) Output binary file. This option is ignored when -e, --emulate is set. Defaults to a .bin of the same name as the input source file. Specified extensions are included, but will always have .bin appended.")
+			.desc("(Optional) Output binary file. This option is ignored when -e, --emulate is set."
+				+"Defaults to a .bin of the same name as the input source file. Specified extensions"
+				+"are included, but will always have .bin appended."
+			)
 			.hasArg().argName("destination")
 			.build();
 		
 		options.addOptionGroup(mode);
 		options.addOption(verbose);
+		options.addOption(terminal);
 		options.addOption(output);
 		return options;
 	}
@@ -102,6 +114,8 @@ public class Main {
 			} else if(cmdline.hasOption("e")) {
 				mode = EMULATE;
 				inputPath = cmdline.getOptionValue("e");
+				
+				Emulator.terminalMode = cmdline.hasOption("t");
 			} else if(cmdline.hasOption("h")) {
 				mode = HELP;
 			}
@@ -135,7 +149,8 @@ public class Main {
 	}
 	
 	private static void emulate() {
-		Log.log("Running emulator...");
+		if(Emulator.terminalMode) Log.log("Running emulator in terminal mode...");
+		else Log.log("Running emulator...");
 		
 		// Read file and create rudimentary memory map:
 		List<String> binary = new FileHandler(inputPath).readIntoList();
@@ -178,6 +193,8 @@ public class Main {
 	 * @see Emulator#bell()
 	 */
 	private static void stallUntilAudioDone(Clip clip) {
+		if(clip == null) return; // Bell was never called
+		
 		while(clip.isRunning()) { // Busy loop is HORRID I know, but by this point we have literally nothing else to do
 			try {
 				Thread.sleep(1); // At least pace ourselves to avoid resource starvation or idk

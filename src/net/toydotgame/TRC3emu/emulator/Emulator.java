@@ -2,6 +2,7 @@ package net.toydotgame.TRC3emu.emulator;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Scanner;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -66,13 +67,38 @@ public class Emulator {
 	 * Stores the current page for memory reads, used by the memory
 	 * read/{@code REA} instruction.
 	 */
-	private static int page; // = 0
+	private static int page; // Init on page 0
 	public static Clip bell; // Expose Clip instance for logic in Main
+	/**
+	 * Enables the "terminal mode" for the emulator. When <b>disabled</b>, and
+	 * the emulator hits a {@code GPI} or {@code GPO} instruction, the emulator
+	 * will prompt the user for a numerical input to give to a certain port. The
+	 * user can then enter this number and hit <i>Enter</i> to input it.<br>
+	 * <br>
+	 * When <b>enabled</b> (i.e. <i>in terminal mode</i>), no such prompt will
+	 * appear. When a GPI instruction is hit, the emulator will open a {@link
+	 * java.util.Scanner Scanner} and read in a single ASCII character, and pass
+	 * this as a byte to the port the program is reading from.<br>
+	 * <br>
+	 * For both cases, the output procedure is vice-versa: in non-terminal mode,
+	 * numbers will be echoed out through the normal information logger, in
+	 * terminal mode, values will be converted to ASCII and echoed out through
+	 * {@link java.lang.System#out System.out}.<br>
+	 * <br>
+	 * If an invalid u8 byte (non-terminal mode) or non-ASCII character
+	 * (terminal mode) is input, the emulator will ignore this and simply prompt
+	 * again.
+	 */
+	public static boolean terminalMode;
+	private static Scanner scanner = new Scanner(System.in);
 	
 	@SuppressWarnings("unused") // Purely for the warning when CLOCK_SPEED is -1
 	public static void main(List<Integer> memory) {
 		// Load memory into class:
 		ram = memory;
+		// Create terminal if needed: Will spawn a window
+		Terminal terminal = null;
+		if(terminalMode) terminal = new Terminal();
 		
 		while(opcode != 1 && pc < 1024) {
 			ir = fetchInstruction();
@@ -166,6 +192,11 @@ public class Emulator {
 					else writeByte(page, a+imm, regfile.read(c));
 					break;
 				case 22: // GPI
+					imm = operands>>3&0x7;
+					c = operands&0x7;
+					
+					regfile.write(c, gpioInput(imm));
+					break;
 				case 23: // GPO
 					Log.fatalError("GPIO instructions not yet implemented!"); // TODO
 					break;
@@ -318,5 +349,28 @@ public class Emulator {
 				Thread.sleep(1); // At least slow down busy loop a bit
 			} catch (InterruptedException e) {} // User probably killed us, so the bell crashing is desired behaviour. Don't create an error 
 		}
+	}
+	
+	private static int gpioInput(int port) {
+		if(terminalMode) {
+			// TODO: Request char input from terminal UI, find a way to block
+			// here until that happens
+			
+			return 0; // TODO
+		}
+				
+		int input = -1;
+		while(true) {
+			try {
+				Log.gpioPrompt("Input for port "+port+": ");
+				input = Integer.parseInt(scanner.nextLine());
+				if(input < 0 || input > 255) throw new NumberFormatException();
+				break;
+			} catch(NumberFormatException e) {
+				Log.error("Invalid input! Enter a decimal byte (0–255).");
+			}
+		}
+		
+		return input;
 	}
 }

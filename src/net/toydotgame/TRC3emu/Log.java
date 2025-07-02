@@ -124,4 +124,15 @@ public class Log {
 		
 		System.out.println("[DEBUG] "+message);
 	}
+	
+	/**
+	 * Prints a prompt for GPIO input/output. This method will <b><i>not</i></b>
+	 * print a newline symbol!
+	 * @param message Prompt/message to print
+	 */
+	public static void gpioPrompt(String message) {
+		// GPIO messages do not respect the user's log level
+		
+		System.out.print("[GPI/O] "+message);
+	}
 }
