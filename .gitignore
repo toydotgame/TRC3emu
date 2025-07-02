@@ -2,7 +2,6 @@
 *.class
 
 # Assembled TRC3 files
-*.o
 *.bin
 
 # Eclipse build things
@@ -12,7 +11,6 @@
 
 # Eclipse project files
 .project
-.classpath
 /.settings
 
 # Log file
