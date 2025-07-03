@@ -109,12 +109,10 @@ public class Emulator {
 			opcode = decodeOpcode();
 			operands = decodeOperands();
 			
-			Log.debug("");
-			Log.debug(
-				"FETCH @ "+Utils.paddedHex(pc<<1, 4)+": "
-				+Utils.paddedBinary(ir>>8, 8)+" "+Utils.paddedBinary(ir&0xFF, 8)
-				+" (opcode="+opcode+","
-				+" operands="+Utils.paddedBinary(operands, 11)+")"
+			Log.debug("\n"
+				+"FETCH @ "+Utils.paddedHex(pc<<1, 4)+": "
+				+"opcode="+opcode+", "
+				+"operands="+Utils.paddedBinary(operands>>8, 3)+" "+Utils.paddedBinary(operands&0xFF, 8)
 			);
 			
 			int a, b, c, imm;
@@ -224,9 +222,7 @@ public class Emulator {
 				default:
 					Log.fatalError("Unimplemented opcode `"+opcode+"`!");
 			}
-			
-			Log.debug("EXECUTE DONE: "+regfile.enumerate());
-			
+						
 			if(CLOCK_SPEED > 0) {
 				try {
 					Thread.sleep((long)(1000/CLOCK_SPEED));

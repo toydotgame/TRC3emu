@@ -118,7 +118,10 @@ public class Assembler {
 			// 3. Validate operands:
 			validateOverflows(instruction);
 			
-			if(instruction.type != Instruction.INSTRUCTION) program.remove(i);
+			if(instruction.type != Instruction.INSTRUCTION) {
+				program.remove(i);
+				i--; // Account for removal
+			}
 		}
 		
 		// Concatenate two data spaces into one stream:

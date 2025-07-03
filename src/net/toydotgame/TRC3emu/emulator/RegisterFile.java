@@ -2,6 +2,7 @@ package net.toydotgame.TRC3emu.emulator;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.toydotgame.TRC3emu.Log;
 
 public class RegisterFile {
 	private int[] dataRegisters = new int[7];
@@ -16,6 +17,8 @@ public class RegisterFile {
 		if(address == 0) return;
 		address--; // Shift index down by 1
 		this.dataRegisters[address] = data&0xFF;
+		
+		Log.debug("REGFILE WRITE: "+this.enumerate());
 	}
 	
 	/**

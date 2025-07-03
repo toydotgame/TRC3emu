@@ -21,7 +21,6 @@ public class ALU extends Emulator {
 		int b = regfile.read(operands[1]);
 		int c = operands[2];
 		int output = 0;
-		Log.debug("a: "+a+", b: "+b+", c: "+c);
 		// For all of these operations, we can assume and rely on the fact that
 		// register values MUST be ∈ [0, 255]
 		switch(operation) {
