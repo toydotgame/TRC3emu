@@ -16,7 +16,10 @@ import javax.swing.border.EmptyBorder;
 
 @SuppressWarnings("serial") // No intent on doing serialisation
 public class Terminal extends JFrame {
-	// TODO: Multi-tab terminals for each port pair? Notification for unread tabs? Think tty0-7
+	// TODO: Multi-tab terminals for each port pair? Notification for unread
+	// tabs? Think tty0-7
+	// TODO: ASCII DEL and pre-32 codepoint support; consts for \r \n newline
+	// accepts
 	private JPanel panel; // Global only for dim() method
 	private JTextArea text;
 	private JScrollPane scroll;
@@ -61,7 +64,6 @@ public class Terminal extends JFrame {
 		grid.setHgap(padding);
 		grid.setVgap(padding);
 		panel.setLayout(grid);
-		//panel.requestFocus(); // This + the Unix one at the bottom is needed for Windows
 		add(panel);
 		
 		// Init JTextArea
@@ -89,7 +91,6 @@ public class Terminal extends JFrame {
 		panel.add(scroll);
 				
 		setVisible(true);
-		//panel.requestFocusInWindow(); // This alone works for Unix
 	}
 	
 	/**
