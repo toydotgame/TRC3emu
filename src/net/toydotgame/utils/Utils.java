@@ -1,4 +1,4 @@
-package net.toydotgame.TRC3emu;
+package net.toydotgame.utils;
 
 import java.util.Collections;
 import java.util.HashMap;

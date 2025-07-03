@@ -1,4 +1,4 @@
-package net.toydotgame.io;
+package net.toydotgame.utils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import net.toydotgame.TRC3emu.Log;
 
 /**
  * Wrapper for the {@link java.util.Scanner} and {@link FlushedFileWriter} classes

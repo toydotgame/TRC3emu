@@ -8,9 +8,10 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import net.toydotgame.TRC3emu.Log;
 import net.toydotgame.TRC3emu.Main;
-import net.toydotgame.TRC3emu.Utils;
+import net.toydotgame.TRC3emu.emulator.terminal.TerminalManager;
+import net.toydotgame.utils.Log;
+import net.toydotgame.utils.Utils;
 
 public class Emulator {
 	/**
@@ -95,22 +96,22 @@ public class Emulator {
 	/**
 	 * Public for the purposes of halt dimming in {@link Main#emulate()}.
 	 */
-	public static Terminal terminal;
+	public static TerminalManager termMan;
 	
 	@SuppressWarnings("unused") // Purely for the warning when CLOCK_SPEED is -1
 	public static void main(List<Integer> memory) {
 		// Load memory into class:
 		ram = memory;
 		// Create terminal if needed: Will spawn a window
-		if(terminalMode) terminal = new Terminal();
+		if(terminalMode) termMan = new TerminalManager();
 		
 		while(opcode != 1 && pc < 1024) {
 			ir = fetchInstruction();
 			opcode = decodeOpcode();
 			operands = decodeOperands();
 			
-			Log.debug("\n"
-				+"FETCH @ "+Utils.paddedHex(pc<<1, 4)+": "
+			Log.debug("");
+			Log.debug("FETCH @ "+Utils.paddedHex(pc<<1, 4)+": "
 				+"opcode="+opcode+", "
 				+"operands="+Utils.paddedBinary(operands>>8, 3)+" "+Utils.paddedBinary(operands&0xFF, 8)
 			);
@@ -198,13 +199,13 @@ public class Emulator {
 					imm = operands>>3&0x7;
 					c = operands&0x7;
 					
-					regfile.write(c, gpioInput(imm));
+					regfile.write(c, gpIn(imm));
 					break;
 				case 23: // GPO
 					a = regfile.read(operands>>6&0x7);
 					imm = operands>>3&0x7;
 					
-					gpioOutput(imm, a);
+					gpOut(imm, a);
 					break;
 				case 24: // BEL
 					bell();
@@ -355,10 +356,8 @@ public class Emulator {
 		}
 	}
 	
-	private static int gpioInput(int port) {
-		if(terminalMode) {
-			return terminal.in();
-		}
+	private static int gpIn(int port) {
+		if(terminalMode) return termMan.input(port);
 				
 		int input = -1;
 		while(true) {
@@ -375,9 +374,9 @@ public class Emulator {
 		return input;
 	}
 	
-	private static void gpioOutput(int port, int data) {
+	private static void gpOut(int port, int data) {
 		if(terminalMode) {
-			terminal.out(data);
+			termMan.output(port, data);
 			return;
 		}
 		

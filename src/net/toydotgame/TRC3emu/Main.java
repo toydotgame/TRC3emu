@@ -14,7 +14,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import net.toydotgame.TRC3emu.assembler.Assembler;
 import net.toydotgame.TRC3emu.emulator.Emulator;
-import net.toydotgame.io.FileHandler;
+import net.toydotgame.utils.FileHandler;
+import net.toydotgame.utils.Log;
 
 public class Main {
 	// Cmdline args yield these settings
@@ -184,7 +185,7 @@ public class Main {
 		
 		stallUntilAudioDone(Emulator.bell);
 		Log.log("Emulator halted!");
-		if(Emulator.terminalMode) Emulator.terminal.dim(); 
+		if(Emulator.terminalMode) Emulator.termMan.halt(); 
 	}
 	
 	/**

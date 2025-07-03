@@ -1,7 +1,7 @@
 package net.toydotgame.TRC3emu.emulator;
 
 import java.util.Arrays;
-import net.toydotgame.TRC3emu.Log;
+import net.toydotgame.utils.Log;
 
 /**
  * Provides a 16-word deep stack interface.

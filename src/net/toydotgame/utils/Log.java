@@ -1,4 +1,4 @@
-package net.toydotgame.TRC3emu;
+package net.toydotgame.utils;
 
 /**
  * Simple logging wrapper that handles logging, log levels, and errors

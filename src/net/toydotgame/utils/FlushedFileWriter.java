@@ -1,4 +1,4 @@
-package net.toydotgame.io;
+package net.toydotgame.utils;
 
 import java.io.File;
 import java.io.FileDescriptor;

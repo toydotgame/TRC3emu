@@ -2,8 +2,8 @@ package net.toydotgame.TRC3emu.assembler;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.toydotgame.TRC3emu.Log;
-import net.toydotgame.TRC3emu.Utils;
+import net.toydotgame.utils.Log;
+import net.toydotgame.utils.Utils;
 import static net.toydotgame.TRC3emu.assembler.Instruction.NONE;
 import static net.toydotgame.TRC3emu.assembler.Instruction.ALU;
 import static net.toydotgame.TRC3emu.assembler.Instruction.IMM8_TO_REG;

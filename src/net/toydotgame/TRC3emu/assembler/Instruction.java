@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.toydotgame.TRC3emu.Utils;
+import net.toydotgame.utils.Utils;
 
 /**
  * Class to hold a single line of assembly source code and its methods to

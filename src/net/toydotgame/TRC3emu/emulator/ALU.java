@@ -1,6 +1,6 @@
 package net.toydotgame.TRC3emu.emulator;
 
-import net.toydotgame.TRC3emu.Log;
+import net.toydotgame.utils.Log;
 
 public class ALU extends Emulator {
 	// ALU operations:

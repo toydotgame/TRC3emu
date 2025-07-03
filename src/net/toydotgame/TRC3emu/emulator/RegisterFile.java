@@ -2,7 +2,7 @@ package net.toydotgame.TRC3emu.emulator;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.toydotgame.TRC3emu.Log;
+import net.toydotgame.utils.Log;
 
 public class RegisterFile {
 	private int[] dataRegisters = new int[7];

@@ -1,9 +1,10 @@
-LDI 37 r2 ; "%" ASCII value
+LDI "%" r2
+
 loop:
-GPI 0 r1
-GPO r1 0
-SUB r1 r2 r0
-BNE loop
-; Else, halt
+GPI p0 r1    ; p0→r1
+GPO r1 p0    ; Echo
+SUB r1 r2 r0 ; r1="%" ASCII?
+BNE loop     ; If so, loop
+; Else, halt:
 HLT
 
