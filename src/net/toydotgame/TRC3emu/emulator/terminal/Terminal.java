@@ -23,6 +23,7 @@ public class Terminal extends JPanel {
 	@Package boolean active;      // True when this is the currently viewed terminal
 	@Package boolean unread;      // This is set true when this terminal is written to but not active
 	private TerminalManager parent; // Owner of this instance
+	private JScrollPane scroll;     // Scroll pane for this specific view
 	
 	// Constants:
 	private static final int padding = 30;        // Padding around view, etc
@@ -65,20 +66,21 @@ public class Terminal extends JPanel {
 		content.setBackground(Color.BLACK);
 		content.setFont(new Font(Font.MONOSPACED, Font.BOLD, 21));
 		content.setEditable(false);
+		content.getCaret().setVisible(true); // Override .setEditable(false) and force caret to appear
 		content.setTabSize(4);
 		content.setFocusable(false);
 		content.setBorder(new EmptyBorder(
+			// Imperfect because on the very last line our vertical scroll activates, but ugh oh well:
 			padding/2, padding, padding/2, padding-scrollbarWidth
 		));
 		add(content);
 		
 		// Add scroll bar to JTextArea:
-		JScrollPane scroll = new JScrollPane(content,
+		scroll = new JScrollPane(content,
 			JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 			JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
 		);
 		scroll.setBorder(null);
-		//scroll.getViewport().setBorder(null); // TODO: Is this useful?
 		scroll.getVerticalScrollBar().setPreferredSize(
 			new Dimension(scrollbarWidth, 0) // Manually force scroll bar size
 		);
@@ -131,6 +133,12 @@ public class Terminal extends JPanel {
 			String.valueOf((char)charCode)
 		);
 		
+		// Auto-scroll and move caret to text insert position: You can get by
+		// with just the caret position causing a scroll, but setting the scroll
+		// pane incorporates the bottom padding too (looks good)
+		scroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+		content.getCaret().setDot(Integer.MAX_VALUE);
+		
 		if(!active) {
 			unread = true;
 			parent.refresh();
@@ -166,7 +174,7 @@ public class Terminal extends JPanel {
 		if(!pendingInput) return;
 		
 		// Don't input non-ASCII/desired:	
-		if(keyCode < 0x20 || keyCode > 0x7E) return; // TODO: Keep DEL char (127) too?
+		if(keyCode == 0x0 || keyCode > 0x7F) return;
 		// TODO: IF including full ASCII in the future, then check that
 		// e.getKeyChar() __DOESN'T__ misbehave
 		// TODO: F-keys input ÿ???
