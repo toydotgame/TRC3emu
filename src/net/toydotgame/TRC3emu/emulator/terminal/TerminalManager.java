@@ -2,6 +2,7 @@ package net.toydotgame.TRC3emu.emulator.terminal;
 
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.util.Set;
 import javax.swing.JFrame;
@@ -58,6 +59,7 @@ public class TerminalManager extends JFrame {
 				refresh();
 			}
 		});
+		tabs.setFont(new Font(Font.MONOSPACED, Font.BOLD, 10));
 		tabs.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		add(tabs);
 		

@@ -19,13 +19,13 @@ import net.toydotgame.utils.Utils;
 @Package
 public class Terminal extends JPanel {
 	// Instance fields:
-	private TerminalManager parent; // Owner of this instance
-	private JScrollPane scroll;     // Scroll pane for this specific view
-	private JTextArea content;      // Text of this terminal
-	private int input;              // User key input to this panel, read when value changes
-	private boolean pendingInput;   // If the terminal is waiting for an input
-	@Package boolean unread;        // This is set true when this terminal is written to but not active
-	@Package boolean active;        // True when this is the currently viewed terminal
+	@Package TerminalManager parent; // Owner of this instance
+	private JScrollPane scroll;      // Scroll pane for this specific view
+	private JTextArea content;       // Text of this terminal
+	private TerminalInput input      // Passes input between key listener and
+		= new TerminalInput(this);   //     whenever the Emulator requests one
+	@Package boolean unread;         // This is set true when this terminal is written to but not active
+	@Package boolean active;         // True when this is the currently viewed terminal
 	
 	// Constants:
 	private static final int PADDING = 30;                        // Padding around view, etc
@@ -63,7 +63,7 @@ public class Terminal extends JPanel {
 	 * print loop in the assembly can—instead of blindly pushing from a register
 	 * to the GPIO—check the value of the char in the register against these
 	 * three values, and handle it accordingly.
-	 * @see #parseChar(int)
+	 * @see #parseCharForPrinting(int)
 	 */
 	private static final boolean ASCII_CONTROL_EXCEPTIONS = true; // Whether to handle BS, DEL, and LF
 	
@@ -90,8 +90,15 @@ public class Terminal extends JPanel {
 			
 			@Override public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_ALT) altDown = true;
+				if(altDown) return;
 				
-				if(!altDown) parseKey(e);
+				// If not an Alt+key input, parse:
+				int keyCode = (int)e.getKeyChar();
+				if(keyCode == KeyEvent.VK_ESCAPE) System.exit(0);
+				if(keyCode == 0x0 || keyCode > 0x7F) return;
+				
+				// Valid keystroke, so input it as it is:
+				input.give(keyCode);
 			}
 			
 			@Override public void keyReleased(KeyEvent e) {
@@ -136,9 +143,25 @@ public class Terminal extends JPanel {
 		
 		String prefix = "  ", suffix = " ";
 		if(unread) prefix = "! ";
-		if(pendingInput) suffix = "*";
+		/* Add !null check because Nimbus L&F specifically (not Metal) crashes if
+		 * the TerminalInput doesn't initialise on time or something? By the time
+		 * the Swing window appears, TerminalManager#refresh() is called again and
+		 * this issue disappears.
+		 * This bug/crash is _only_ for Nimbus and with this patch it doesn't even
+		 * manifest by the time the window appears. ¯\_(ツ)_/¯
+		 */
+		if(input != null && input.pending) suffix = "*";
 		
 		return prefix+title+suffix;
+	}
+	
+	/**
+	 * Dim the terminal screen for this instance.
+	 */
+	@Package void halt() {
+		Color darkGray = new Color(28, 28, 28);
+		setBackground(darkGray);
+		content.setBackground(darkGray);
 	}
 	
 	/**
@@ -146,22 +169,11 @@ public class Terminal extends JPanel {
 	 * has actually occurred. This method will cause this specified Terminal
 	 * instance to go into a psueodo-waiting/prompting-for-input state.
 	 * @return Key code of the input character
-	 * @see #parseKey(KeyEvent)
 	 */
 	public int read() {
-		pendingInput = true; // Unlock terminal
-		parent.refresh(); // Refresh tab titles to show that this terminal wants attention
+		Log.debug("read(): Running on "+Thread.currentThread().getName());
 		
-		while(pendingInput) { // When #parseKey(KeyEvent) re-locks this, we can continue
-			try { // Busy loop sucks, but CPU emulation is sequential anyway
-				Thread.sleep(1); // No time for EDT to check user input otherwise
-				// TODO: Terminal manager on separate thread for optimisations,
-				// non-busy loop implementation therefore
-			} catch(InterruptedException e) {}
-		} // Exits when #parseKey(KeyEvent) locks the terminal again, so return:
-		
-		parent.refresh(); // Refresh tab titles to reflect we got our input and we're happy
-		return (int)input; // Simple type cast to yield ASCII
+		return input.get();
 	}
 	
 	/**
@@ -169,7 +181,7 @@ public class Terminal extends JPanel {
 	 * @param charCode Numeric code point of the character to print
 	 */
 	public void print(int charCode) {
-		Character c = parseChar(charCode);
+		Character c = parseCharForPrinting(charCode);
 		if(c == null) return; // Don't print anything
 		
 		if((int)c == 0x8 || (int)c == 0x7F) { // Handle backspaces graphically:
@@ -191,7 +203,7 @@ public class Terminal extends JPanel {
 		scroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
 		content.getCaret().setDot(Integer.MAX_VALUE);
 		
-		if(!active) {
+		if(!active) { // GUI notification when unfocused:
 			unread = true;
 			parent.refresh();
 		}
@@ -204,7 +216,7 @@ public class Terminal extends JPanel {
 	 * @return {@code char} of the requested character, or {@code null} if the
 	 * character should not be printed 
 	 */
-	private Character parseChar(int charCode) {
+	private Character parseCharForPrinting(int charCode) {
 		if(charCode > 0x7F) return null; // Handle extended ASCII
 		
 		if(charCode < 0x20) {
@@ -225,40 +237,5 @@ public class Terminal extends JPanel {
 		
 		// Else, valid character who cares:
 		return (char)charCode;
-	}
-	
-	/**
-	 * Dim the terminal screen for this instance.
-	 */
-	@Package void halt() {
-		Color darkGray = new Color(28, 28, 28);
-		setBackground(darkGray);
-		content.setBackground(darkGray);
-	}
-	
-	/**
-	 * Takes a {@link java.awt.event.KeyEvent KeyEvent} in, and if the following
-	 * conditions are met, passes a {@code char} of the input KeyEvent through to
-	 * a {@link Terminal} instance.
-	 * <ol>
-	 * 	<li>This (focused) terminal panel is actually waiting for an input</li>
-	 * 	<li>The value of the key code is within the range {@code 0x20}–{@code
-	 * 0x7E} (inclusive)</li>
-	 * </ol>
-	 * @param e {@link java.awt.event.KeyEvent KeyEvent} to parse and input
-	 * @see #read()
-	 */
-	private void parseKey(KeyEvent e) {
-		int keyCode = (int)e.getKeyChar();
-		if(keyCode == KeyEvent.VK_ESCAPE) System.exit(0);
-		
-		// Don't pass key to terminal who doesn't want it:
-		if(!pendingInput) return;
-		
-		// Don't input non-ASCII/desired:	
-		if(keyCode == 0x0 || keyCode > 0x7F) return;
-		
-		input = keyCode;
-		pendingInput = false; // VERY IMPORTANT! Re-lock terminal once input sent
 	}
 }
