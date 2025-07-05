@@ -176,11 +176,11 @@ public class Emulator {
 				case 17: // BLT, aka branch if !$C
 					if(!C) jump(operands);
 					break;
-				case 18: // CAL
+				case 18: // JSR
 					stack.push(pc+1);
 					jump(operands);
 					break;
-				case 19: // RET
+				case 19: // RTS
 					// Even though jump jumps to the desired instruction #, it
 					// expects an 11-bit operand reading, so we shift to 11-bit:
 					jump(stack.pop()<<1);
@@ -357,7 +357,7 @@ public class Emulator {
 	}
 	
 	private static int gpIn(int port) {
-		if(terminalMode) return termMan.input(port);
+		if(terminalMode) return termMan.get(port).read();
 				
 		int input = -1;
 		while(true) {
@@ -376,7 +376,7 @@ public class Emulator {
 	
 	private static void gpOut(int port, int data) {
 		if(terminalMode) {
-			termMan.output(port, data);
+			termMan.get(port).print(data);
 			return;
 		}
 		

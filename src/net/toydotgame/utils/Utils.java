@@ -12,12 +12,12 @@ public class Utils {
 	private static Map<String, Integer> loadOpcodes() {
 		// Convert String[] to a map of the value at String[i] to the index i:
 		Map<String, Integer> map = new HashMap<String, Integer>();
-		String[] mnemonics = {
+		String[] mnemonics = { // All values must be uppercase, parser does .toUpperCase()
 			"NOP", "HLT", "ADD", "ADI",
 			"SUB", "XOR", "XNO", "IOR",
 			"NOR", "AND", "NAN", "RSH",
 			"LDI", "JMP", "BEQ", "BNE",
-			"BGT", "BLT", "CAL", "RET",
+			"BGT", "BLT", "JSR", "RTS",
 			"REA", "STO", "GPI", "GPO",
 			"BEL", "PAS", "PAG"
 		};
