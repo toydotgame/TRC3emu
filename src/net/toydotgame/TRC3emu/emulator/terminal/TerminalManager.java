@@ -3,12 +3,15 @@ package net.toydotgame.TRC3emu.emulator.terminal;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
+import java.util.Set;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import net.toydotgame.utils.Log;
 import net.toydotgame.utils.Package;
 
 /**
@@ -16,11 +19,6 @@ import net.toydotgame.utils.Package;
  */
 @SuppressWarnings("serial") // No intent on serialisation
 public class TerminalManager extends JFrame {
-	// TODO: Unread notif
-	// TODO: Tabs for all terminals, nicely sized pls
-	// TODO: ASCII DEL and pre-32 codepoint support; consts for \r \n newline
-	// accepts
-	
 	// Instance fields:
 	private Terminal[] t = new Terminal[terminalCount]; // Establish all terminals
 	private JTabbedPane tabs;                           // Global only for #refreshTitle()
@@ -72,6 +70,14 @@ public class TerminalManager extends JFrame {
 		
 		setVisible(true);
 		refresh(); // To account for the don't-run-when-not-visible code in this method
+		
+		Log.debug("Created new TerminalManager GUI on thread "
+			+"\""+Thread.currentThread().getName()+"\". "
+			+"Is EDT?: "+SwingUtilities.isEventDispatchThread()
+		);
+		Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+		Log.debug("CURRENTLY RUNNING THREADS:");
+		for(Thread t : threadSet) Log.debug("* "+t.getName()); // AWT-EventQueue-0 (EDT) doesn't run straight away
 	}
 	
 	/**
