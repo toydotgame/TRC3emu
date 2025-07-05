@@ -318,7 +318,7 @@ public class Emulator {
 	 * if {@link #bell}{@link javax.sound.sampled.DataLine#isRunning()
 	 * .isRunning()} is {@code true}, and if so, it will busy-loop until that
 	 * value becomes {@code false}, when the program finally exits.
-	 * @see Main#stallUntilAudioDone(boolean)
+	 * @see Main#stallUntilAudioDone(Clip)
 	 */
 	private static void bell() {
 		AudioInputStream source = null; // Make compiler happy

@@ -15,44 +15,18 @@ import java.io.IOException;
  */
 public class FlushedFileWriter extends FileWriter {
 	// Auto-generated constructors for superclass (we don't need to change these):
-	/**
-	 * @see java.io.FileWriter#FileWriter(String)
-	 * @param fileName
-	 * @throws IOException
-	 */
 	public FlushedFileWriter(String fileName) throws IOException {
 		super(fileName);
 	}
-	/**
-	 * @see java.io.FileWriter#FileWriter(File)
-	 * @param file
-	 * @throws IOException
-	 */
 	public FlushedFileWriter(File file) throws IOException {
 		super(file);
 	}
-	/**
-	 * @see java.io.FileWriter#FileWriter(FileDescriptor)
-	 * @param fd
-	 */
 	public FlushedFileWriter(FileDescriptor fd) {
 		super(fd);
 	}
-	/**
-	 * @see java.io.FileWriter#FileWriter(String, boolean)
-	 * @param fileName
-	 * @param append
-	 * @throws IOException
-	 */
 	public FlushedFileWriter(String fileName, boolean append) throws IOException {
 		super(fileName, append);
 	}
-	/**
-	 * @see java.io.FileWriter#FileWriter(File, boolean)
-	 * @param file
-	 * @param append
-	 * @throws IOException
-	 */
 	public FlushedFileWriter(File file, boolean append) throws IOException {
 		super(file, append);
 	}
@@ -61,7 +35,7 @@ public class FlushedFileWriter extends FileWriter {
 	 * Override for {@code write(String)} only. Calls {@code write()} followed by
 	 * a {@code flush()}
 	 * @param str String to be written
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 * @see java.io.Writer#write(String)
 	 * @see java.io.OutputStreamWriter#flush()
 	 */
@@ -73,7 +47,7 @@ public class FlushedFileWriter extends FileWriter {
 	/**
 	 * Equivalent of {@code write(str + "\n")}
 	 * @param str String to be written
-	 * @throws IOException
+	 * @throws IOException If an I/O error occurs
 	 * @see FlushedFileWriter#write(String)
 	 */
 	public void writeln(String str) throws IOException {

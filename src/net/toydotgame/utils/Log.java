@@ -27,8 +27,9 @@ public class Log {
 	
 	/**
 	 * Log level if #setLogLevel(int) isn't called. Defaults to {@link #NORMAL}.
-	 * Used in {@link Assembler#main(List)} to also determine whether output
-	 * binaries should be verbose or not (hacky).
+	 * Used in {@link net.toydotgame.TRC3emu.assembler.Assembler#main(List)
+	 * Assembler.main(List)} to also determine whether output binaries should be
+	 * verbose or not (hacky).
 	 */
 	public static int logLevel = NORMAL;
 	/**
@@ -66,6 +67,7 @@ public class Log {
 	}
 	/**
 	 * Calls {@code fatalError(message, DEFAULT_EXIT)}
+	 * @param message Exception message
 	 * @see Log#fatalError(String, int)
 	 * @see Log#DEFAULT_EXIT
 	 */
@@ -88,6 +90,7 @@ public class Log {
 	}
 	/**
 	 * Calls {@code exit(message, DEFAULT_EXIT)}
+	 * @param message Message to print
 	 * @see Log#exit(String, int)
 	 * @see Log#DEFAULT_EXIT
 	 */

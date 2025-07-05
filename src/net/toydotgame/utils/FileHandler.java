@@ -32,7 +32,7 @@ public class FileHandler {
 	 */
 	public static final int READ = 0;
 	/**
-	 * Constant to denote write-only {@link FileHanlder} objects
+	 * Constant to denote write-only {@link FileHandler} objects
 	 */
 	public static final int WRITE = 1;
 
@@ -40,7 +40,6 @@ public class FileHandler {
 	 * Creates a new {@link FileHandler} instance
 	 * @param path Relative path of file
 	 * @param mode Either {@link #READ} or {@link #WRITE}
-	 * @return FileHandler for given path
 	 * @see FileHandler
 	 * @see FileHandler#name
 	 * @see FileHandler#mode
@@ -76,6 +75,7 @@ public class FileHandler {
 	}
 	/**
 	 * Creates a read-only {@link FileHandler} instance
+	 * @param path Relative path of file
 	 * @see FileHandler#FileHandler(String, int)
 	 */
 	public FileHandler(String path) {

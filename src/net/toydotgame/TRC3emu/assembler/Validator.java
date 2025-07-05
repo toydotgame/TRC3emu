@@ -171,8 +171,8 @@ public class Validator {
 	}
 	
 	/**
-	 * Takes the first element in this instruction's {@link #tokens} List, and
-	 * looks it up in a lookup table.
+	 * Takes the first element in this instruction's {@link Instruction#tokens}
+	 * List, and looks it up in a lookup table.
 	 * @param instruction {@link Instruction} instance
 	 * @return Numeric opcode, or {@code null} if not found
 	 */
@@ -187,7 +187,7 @@ public class Validator {
 	 * maximum value.<br>
 	 * <br>
 	 * This method takes in an instruction instance, checks its opcode against
-	 * the {@link Validator#instructionTypes} lookup table, takes a List of
+	 * the {@link Instruction#instructionTypes} lookup table, takes a List of
 	 * numeric operands (already tested as numeric and provided by {@link
 	 * Assembler#validateOverflows(Instruction)}, and checks that they
 	 * are {@code >= 0} and also {@code <=} some integer maximum allowed value,
@@ -200,8 +200,6 @@ public class Validator {
 	 * {@link Instruction#opcode} instance field and also passed along
 	 * to {@link Assembler#syntaxError(String, Instruction)} for the
 	 * cases of invalid syntax
-	 * @param operands Integer List of the operands of this function, already
-	 * not {@code null} and known to be {@code int}s
 	 * @return {@code true} if the instruction has in-bounds operands, {@code
 	 * false} otherwise
 	 * @see Validator#failUnderOverflow(List, int, Instruction)
@@ -236,7 +234,7 @@ public class Validator {
 	 * Checks that the input List of integers are within the range {@code 0}–
 	 * {@code max} (inclusive). Will throw an error if any value to check is
 	 * {@code null}, however this method is called at {@link
-	 * Validator#validateOverflows(Integer, List)}, and no value in the input
+	 * Validator#validateOverflows(Instruction)}, and no value in the input
 	 * List there may be {@code null} because {@link
 	 * Assembler#validateOverflows(Instruction)} catches that case.
 	 * @param args List of integers to check

@@ -198,7 +198,7 @@ public class Assembler {
 	/**
 	 * Raise a syntax error and print a message without a line index
 	 * @param message Message describing the error
-	 * @see Assembler#syntaxError(String, int)
+	 * @see Assembler#syntaxError(String, Instruction)
 	 */
 	public static void syntaxError(String message) {
 		syntaxErrors++;
@@ -347,14 +347,14 @@ public class Assembler {
 	 * <ol>
 	 * 	<li>There are the correct number of arguments for this instruction. This
 	 * is handled by {@link Validator#validateInstruction(Instruction)}
-	 * and {@link Validator#validateAlias(Instruction)}</li>
+	 * and {@link Validator#validateAlias(Instruction, boolean)}</li>
 	 * 	<li>Each argument (operand) fits within the number of bits allocated in
 	 * the instruction word format. This is handled here</li>
 	 * </ol>
 	 * @param instruction Instance of {@link Instruction}, where {@link
 	 * Instruction#type}={@link Instruction#INSTRUCTION}
 	 * @see Validator#validateOverflows(Instruction)
-	 * @see Validator#validateAlias(Instruction)
+	 * @see Validator#validateAlias(Instruction, boolean)
 	 * @see Validator#validateInstruction(Instruction)
 	 */
 	private static void validateOverflows(Instruction instruction) {

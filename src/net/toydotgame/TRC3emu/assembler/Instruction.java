@@ -19,7 +19,7 @@ public class Instruction {
 	public List<String> tokens;
 	/**
 	 * Line # the instruction came from (starts at 1 if {@code
-	 * Instruction(String, 0) was used, for example).
+	 * Instruction(String, 0)} was used, for example).
 	 */
 	public final Integer lineIndex;
 	/**
@@ -57,7 +57,7 @@ public class Instruction {
 	 * Integer List of the operands of the instruction, set by {@link
 	 * Assembler#validateOverflows(Instruction)}, and used by {@link
 	 * Validator#validateOverflows(Instruction)} and {@link
-	 * Encoder#encodeInstruction(Instruction
+	 * Encoder#encodeInstruction(Instruction)}
 	 */
 	public List<Integer> operandInts;
 	
@@ -199,7 +199,7 @@ public class Instruction {
 
 	/**
 	 * Substitute the first token in {@code this.}{@link #tokens} to the numeric
-	 * value from the lookup table {@link Instruction#opcodes}.
+	 * value from the lookup table {@link net.toydotgame.utils.Utils#opcodes}.
 	 * Silently returns void if this is not an instruction. Raises fatal error
 	 * if {@code this} is an instruction but is not found in the {@code opcodes}
 	 * lookup table.

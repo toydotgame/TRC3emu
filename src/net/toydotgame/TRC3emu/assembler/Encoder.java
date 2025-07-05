@@ -19,8 +19,8 @@ import static net.toydotgame.TRC3emu.assembler.Instruction.REG_ONLY;
  */
 public class Encoder {
 	/**
-	 * Takes in the {@link Assembler#programData} List (list of completed
-	 * instructions), and the {@link Assembler#variableData} List (list of
+	 * Takes in the {@link Assembler#main(List)}{@code .program} List (list of completed
+	 * instructions), and the {@link Assembler#variables} List (list of
 	 * numeric constants ∈ (ℤ ∩ [0, 255]).<br>
 	 * <br>
 	 * This method will encode the instructions found in {@code programData}
@@ -28,8 +28,8 @@ public class Encoder {
 	 * instruction word for TRC3. Additionally, it will encode each value in
 	 * {@code variableData} as an 8-bit word and place <i>that</i> list at the
 	 * end of the program listing.
-	 * @param programData List of validated, completely numerical instructions
-	 * @param variableData List of assembly variables
+	 * @param program List of validated, completely numerical instructions
+	 * @param variables List of assembly variables
 	 * @return Final memory map of the assembled program
 	 */
 	public static List<String> main(List<Instruction> program, List<Integer> variables) {

@@ -190,8 +190,8 @@ public class Main {
 	
 	/**
 	 * Stall with a busy-loop if {@link Emulator#bell} is found to be playing
-	 * @param audioPlaying Pass in the value of {@link Emulator#bell}{@link
-	 * javax.sound.sampled.DataLine#isRunning() .isRunning()}
+	 * @param clip Instance of {@link javax.sound.sampled.Clip Clip} that we are
+	 * waiting for
 	 * @see Emulator#bell()
 	 */
 	private static void stallUntilAudioDone(Clip clip) {
