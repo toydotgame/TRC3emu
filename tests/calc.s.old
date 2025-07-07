@@ -1,0 +1,41 @@
+; AUTHOR: toydotgame
+; CREATED ON: 2025-07-06
+; Simple 8-bit calculator using ASCII commands. REAL dirty and nasty.
+; Incomplete. Currently just adds two single decimal digits and reports
+; a base-36 response (as in 0-9, A-Z)
+
+ldi ">" r7
+gpo r7 p0     ; Print ">"
+
+gpi p0 r1
+gpo r1 p0     ; Echo
+ldi "0" r7
+sub r1 r7 r1  ; Subtract ASCII code point offset
+
+ldi "+" r7
+gpo r7 p0     ; Print "+"
+
+gpi p0 r2     ; Number 2
+gpo r2 p0
+ldi "0" r7
+sub r2 r7 r2
+
+add r1 r2 r3
+ldi 10 r7
+sub r3 r7 r0
+blt print
+adi 7 r3
+
+;ldi 10 r7
+;sub r3 r7 r0 ; output > 10?
+;blt print    ; No, so print ones
+
+print:
+ldi 10 r7     ; LF char
+gpo r7 p0
+ldi "=" r7
+gpo r7 p0
+adi "0" r3    ; Add ASCII offset
+gpo r3 p0
+hlt
+

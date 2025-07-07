@@ -142,10 +142,7 @@ public class Assembler {
 		
 		if(Log.logLevel < Log.VERBOSE) return binary;
 		
-		// Verbose mode add details to compiled output
-		Log.error("binary size: "+binary.size());
-		Log.error("program: "+program.size());
-		Log.error("vars: "+(binary.size()-(program.size()<<1)));
+		// Verbose mode add details to compiled output:
 		for(int i = 0; i < binary.size(); i++) {
 			String line = binary.get(i);
 			
@@ -158,14 +155,11 @@ public class Assembler {
 				// Hack for lazy (i>>1)→varIndex conversion that remembers to
 				// remove program size beforehand:
 				int variableIndex = i-(program.size()<<1);
-				Log.debug("VAR "+variableIndex);
-				//if(i%2 == 1) variableIndex++;
 				
 				// Enumerate list of variable keys, create a List<String> from
 				// that, then get the key at numerical index `variableIndex`: 
 				String variableKey = new ArrayList<String>(variables.keySet())
 					.get(variableIndex);
-				Log.debug(variableKey);
 				
 				srcLine = "\t."+variableKey+" "+String.valueOf(variables.get(variableKey));
 			}

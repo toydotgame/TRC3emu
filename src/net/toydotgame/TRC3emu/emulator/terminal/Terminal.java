@@ -11,6 +11,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.text.Caret;
 import net.toydotgame.utils.Log;
 import net.toydotgame.utils.Package;
 import net.toydotgame.utils.Utils;
@@ -113,7 +116,16 @@ public class Terminal extends JPanel {
 		content.setBackground(Color.BLACK);
 		content.setFont(new Font(Font.MONOSPACED, Font.BOLD, 21));
 		content.setEditable(false);
+		// TODO: Machine-code caret implementation, given a terminal caret will
+		// not exist in Minecraft without an assembly implementation
 		content.getCaret().setVisible(true); // Override .setEditable(false) and force caret to appear
+		content.getCaret().addChangeListener(new ChangeListener() {
+			// Disallow moving the caret (given the machine does not support this)
+			@Override public void stateChanged(ChangeEvent e) {
+				((Caret)e.getSource())
+					.setDot(Integer.MAX_VALUE);
+			}
+		});
 		content.setTabSize(4);
 		content.setFocusable(false);
 		content.setBorder(new EmptyBorder(
@@ -171,8 +183,6 @@ public class Terminal extends JPanel {
 	 * @return Key code of the input character
 	 */
 	public int read() {
-		Log.debug("read(): Running on "+Thread.currentThread().getName());
-		
 		return input.get();
 	}
 	

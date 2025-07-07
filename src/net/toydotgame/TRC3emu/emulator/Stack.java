@@ -25,7 +25,7 @@ public class Stack {
 			this.stack[i] = this.stack[i-1];
 		this.stack[0] = address&0x3FF;
 		
-		Log.log("STACK PUSHED: "+Arrays.toString(stack));
+		Log.debug("STACK PUSHED: "+Arrays.toString(stack));
 	}
 	
 	/**
@@ -43,7 +43,7 @@ public class Stack {
 		for(int i = 0; i < this.stack.length-1; i++)
 			this.stack[i] = this.stack[i+1];
 		
-		Log.log("STACK POPPED: Got "+pop+", stack: "+Arrays.toString(stack));
+		Log.debug("STACK POPPED: "+pop+" "+Arrays.toString(stack));
 		
 		return pop;
 	}
