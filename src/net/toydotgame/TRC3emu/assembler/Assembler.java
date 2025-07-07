@@ -2,6 +2,7 @@ package net.toydotgame.TRC3emu.assembler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.toydotgame.utils.Log;
@@ -33,13 +34,17 @@ public class Assembler {
 	 * @see Assembler#variables
 	 */
 	private static Map<String, Integer> aliases = initAliases();
-	private static Map<String, Integer> initAliases() { // Assembler aliases
+	private static Map<String, Integer> initAliases() { // Assembler aliases, always lowercase
 		Map<String, Integer> map = new HashMap<String, Integer>();
 		for(int i = 0; i < 8; i++) {
 			map.put("r"+i, i); // Register aliases
 			map.put("p"+i, i); // GPIO ports
 		}
-		for(int i = 32; i <= 126; i++) map.put("\""+(char)i+"\"", i); // Printable ASCII
+		
+		// Printable ASCII:
+		map.put("\"sp\"", 32); // Space
+		for(int i = 33; i <= 126; i++) map.put("\""+(char)i+"\"", i);
+		
 		return map;
 	}
 	
@@ -57,7 +62,7 @@ public class Assembler {
 	 * final binary that represents the final memory map.
 	 * @see Assembler#aliases
 	 */
-	private static Map<String, Integer> variables = new HashMap<String, Integer>();
+	private static Map<String, Integer> variables = new LinkedHashMap<String, Integer>();
 	
 	/**
 	 * Assembles a source file and returns its binary representation
@@ -138,6 +143,9 @@ public class Assembler {
 		if(Log.logLevel < Log.VERBOSE) return binary;
 		
 		// Verbose mode add details to compiled output
+		Log.error("binary size: "+binary.size());
+		Log.error("program: "+program.size());
+		Log.error("vars: "+(binary.size()-(program.size()<<1)));
 		for(int i = 0; i < binary.size(); i++) {
 			String line = binary.get(i);
 			
@@ -149,13 +157,15 @@ public class Assembler {
 			} else { // Else, log variable space
 				// Hack for lazy (i>>1)→varIndex conversion that remembers to
 				// remove program size beforehand:
-				int variableIndex = i>>1-program.size();
-				if(i%2 == 1) variableIndex++;
+				int variableIndex = i-(program.size()<<1);
+				Log.debug("VAR "+variableIndex);
+				//if(i%2 == 1) variableIndex++;
 				
 				// Enumerate list of variable keys, create a List<String> from
 				// that, then get the key at numerical index `variableIndex`: 
 				String variableKey = new ArrayList<String>(variables.keySet())
 					.get(variableIndex);
+				Log.debug(variableKey);
 				
 				srcLine = "\t."+variableKey+" "+String.valueOf(variables.get(variableKey));
 			}
@@ -214,7 +224,7 @@ public class Assembler {
 	 * @param instruction {@link Instruction} instance
 	 */
 	private static void defineAlias(Instruction instruction) {
-		String alias = instruction.alias;
+		String alias = instruction.alias; // Set from Validator#validateAlias(Instruction)
 		// If an alias, check that the alias is not already defined, else return
 		switch(instruction.type) {
 			default:
@@ -232,6 +242,9 @@ public class Assembler {
 		// type constants to see the function of each
 		switch(instruction.type) {
 			case Instruction.VARIABLE:
+				// Substitute hardcoded or previously-created aliases in:
+				substituteAliases(instruction);
+				
 				try {
 					int value = Integer.parseInt(instruction.tokens.get(1));
 					if(value < 0 || value > 255) throw new NumberFormatException();
@@ -256,6 +269,8 @@ public class Assembler {
 				
 				break;
 			case Instruction.DEFINITION:
+				substituteAliases(instruction);
+				
 				try {
 					int value = Integer.parseInt(instruction.tokens.get(1));
 					if(value < 0) throw new NumberFormatException();
